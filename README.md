@@ -1,5 +1,7 @@
 # CS174A-TeamProject
 
+(edit this later with game instructions)
+
 Rachel Nguyen // rachelnguyn@gmail.com // rachnguyn // 205213689
 
 Kimberly Sung // wansung186@gmail.com // kimsung12 // 805089045
