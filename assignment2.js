@@ -1,8 +1,9 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Shader, Texture, Material, Scene,
 } = tiny;
+
 
 class Cube extends Shape {
     constructor() {
@@ -71,37 +72,82 @@ class Base_Scene extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
         this.hover = this.swarm = false;
+        this.scratchpad = document.createElement('canvas');
+        // A hidden canvas for re-sizing the real canvas to be square:
+        this.scratchpad_context = this.scratchpad.getContext('2d');
+        this.scratchpad.width = 256;
+        this.scratchpad.height = 256;                // Initial image source: Blank gif file:
+        this.texture = new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+
+        const bump = new defs.Fake_Bump_Map(1);
+        const textured = new defs.Textured_Phong(1);
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
-            'cube': new Cube(),
-            'outline': new Cube_Outline(),
-            'strip': new Cube_Single_Strip()
+            box: new defs.Cube(),
+            fishbody: new defs.Subdivision_Sphere(4),
+            box_2: new defs.Cube(),
+            axis: new defs.Axis_Arrows(),
+            waterbox: new defs.Subdivision_Sphere(4),
+            tail: new defs.Triangle(),
         };
-
+        
         // Materials
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
+                {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),
+            eye: new Material(new defs.Phong_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#000000")}),
+            turtle: new Material(new defs.Phong_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#548a62")}),
+            turtlehead: new Material(new defs.Phong_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#33573c")}),
+            guppies: new Material(new defs.Phong_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
+            blue: new Material(new defs.Phong_Shader(),
+                {ambient: 1, diffusivity: .6, color: hex_color("#2596be")}),
+            a: new Material(bump, {ambient: .5, texture: new Texture("assets/background2.jpg")}),
+            b: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
+            c: new Material(bump, {ambient: 1, texture: this.texture})
         };
 
-        // The white material and basic shader are used for drawing the outline.
-        this.white = new Material(new defs.Basic_Shader());
+        this.y_movement = 0;
+        this.x_movement = 0;
+;
+    }
+}
 
-        // Colors 
-        this.colorArray = [];
-        this.set_colors();          // fills the array with 8 random colors
+export class Assignment2 extends Base_Scene {  
 
-        // Flags
-        this.isOutlined = false;    
-        this.isSwaying = true;
+    make_control_panel() {
+        // Up Movement (arrow key up)
+        this.key_triggered_button("Up", ['ArrowUp'], () => {
+            this.y_movement = this.y_movement + 1;
+        });
+        // Down Movement (arrow key down)
+        this.key_triggered_button("Down", ['ArrowDown'], () => {
+            this.y_movement = this.y_movement - 1; 
+        });
+        
+        // Left Movement (arrow key left)
+        this.key_triggered_button("Left", ['ArrowLeft'], () => {
+            this.x_movement = this.x_movement - 1; 
+        });
+
+        // Right Movement (arrow key right)
+        this.key_triggered_button("Right", ['ArrowRight'], () => {
+            this.x_movement = this.x_movement + 1; 
+        });
+    
     }
 
-    display(context, program_state) {
-        // display():  Called once per frame of animation. Here, the base class's display only does
-        // some initial setup.
+    display(context, program_state) {                                 // display():  Draw both scenes, clearing the buffer in between.
+        let model_transform = Mat4.identity();
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
-        // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
+        const light_position = vec4(0, 5, 5, 1);
+        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];        
+
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
@@ -110,119 +156,200 @@ class Base_Scene extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
 
-        // Lights: Values of vector or point lights.
-        const light_position = vec4(0, 5, 5, 1);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+        // Perform two rendering passes.  The first one we erase and
+        // don't display after using to it generate our texture.
+        // Draw Scene 1:
+
+        this.scratchpad_context.drawImage(context.canvas, 0, 0, 256, 256);
+
+        // Don't call copy to GPU until the event loop has had a chance
+        // to act on our SRC setting once:
+        if (this.skipped_first_frame)
+            // Update the texture with the current scene:
+        this.texture.copy_onto_graphics_card(context.context, false);
+        this.skipped_first_frame = true;
+
+        // Start over on a new drawing, never displaying the prior one:
+        context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
+
+
+        let background_transform = model_transform;
+        background_transform = background_transform.times(Mat4.rotation(0, 0, 1, 0))
+                                                   .times(Mat4.translation(0, 0, 0, 0))
+                                                   .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+                                                   .times(Mat4.scale(60, 60, 60))
+                                                   .times(Mat4.rotation(t/50, 0, 1, 0));
+
+        // Draw Background
+        this.shapes.waterbox.draw(context, program_state, background_transform, this.materials.b);
+        // this.shapes.box.draw(context, program_state, model_transform, this.materials.plastic);
+
+        // Up Count (movement control) 
+        var y = this.y_movement;
+        var x = this.x_movement;
+
+        let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
+                                               .times(Mat4.translation(x/2,y/4,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
+
+        let turtle2_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
+                                               .times(Mat4.scale(0.5,0.5,0.2,0))
+                                               .times(Mat4.translation(x*1.5,y/1.1,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle2_transform, this.materials.turtlehead);
+
+        let turtle3_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x/1.1,y,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
+
+        let turtle4_transform = model_transform.times(Mat4.translation(-1.5, -0.7, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x/1.1,y,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
+
+        let turtle5_transform = model_transform.times(Mat4.translation(1.6, 1, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x/1.1,y,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
+
+        let turtle6_transform = model_transform.times(Mat4.translation(1.5, -0.7, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x/1.1,y,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
+
+
+        let shark_transform = model_transform.times(Mat4.translation(-30, 15, 0, 0))
+                                             .times(Mat4.translation(t,0,0,0))
+                                             .times(Mat4.scale(3,1.5,1,1));
+        this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
+
+        let eye_transform = model_transform.times(Mat4.translation(-28, 15, 0.8, 0))
+                                             .times(Mat4.translation(t,0,0,0))
+                                             .times(Mat4.scale(0.1,0.1,0.1,1));
+        this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
+
+        let tails_transform = model_transform.times(Mat4.translation(-33.03, 15, 0, 0))
+                                             .times(Mat4.translation(t,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-74.7,0,0,1));
+        this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
+
+        let tails2_transform = model_transform.times(Mat4.translation(-33.03, 15, 0, 0))
+                                             .times(Mat4.translation(t,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-27.4,0,0,1));
+        this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
+
+        let fin_transform = model_transform.times(Mat4.translation(-30.5, 16.5, 0, 0))
+                                             .times(Mat4.translation(t,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-145,0,0,1));
+        this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
+
+        let fish_transformation = model_transform.times(Mat4.translation(20, 20, 0, 0))
+                                             .times(Mat4.translation(-t*3,0,0,0))
+                                             .times(Mat4.scale(0.8,0.6,0.5,1));
+
+        this.shapes.fishbody.draw(context, program_state, fish_transformation, this.materials.guppies);
+
+        let tail_transform = model_transform.times(Mat4.translation(20.5, 20, 0, 0))
+                                             .times(Mat4.translation(-t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(74.61,0,0,1));
+        this.shapes.tail.draw(context, program_state, tail_transform, this.materials.guppies);
+
+
+
+        let fish_transformation2 = model_transform.times(Mat4.translation(-37, 10, 0, 0))
+                                              .times(Mat4.translation(t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation2, this.materials.guppies);
+
+        let tail_transform2 = model_transform.times(Mat4.translation(-37.5, 10, 0, 0))
+                                             .times(Mat4.translation(t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(-73,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform2, this.materials.guppies);
+
+        let fish_transformation3 = model_transform.times(Mat4.translation(37, 17, 0, 0))
+                                              .times(Mat4.translation(-t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation3, this.materials.guppies);
+
+        let tail_transform3 = model_transform.times(Mat4.translation(37.5, 17, 0, 0))
+                                             .times(Mat4.translation(-t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(74.61,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform3, this.materials.guppies);
+
+        let fish_transformation4 = model_transform.times(Mat4.translation(35, 7, 0, 0))
+                                              .times(Mat4.translation(-t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation4, this.materials.guppies);
+
+        let tail_transform4 = model_transform.times(Mat4.translation(35.5, 7, 0, 0))
+                                             .times(Mat4.translation(-t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(74.61,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform4, this.materials.guppies);
+
+        let fish_transformation5 = model_transform.times(Mat4.translation(-48, 12, 0, 0))
+                                              .times(Mat4.translation(t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation5, this.materials.guppies);
+
+        let tail_transform5 = model_transform.times(Mat4.translation(-48.5, 12, 0, 0))
+                                             .times(Mat4.translation(t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(-73,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform5, this.materials.guppies);
+
+        let fish_transformation6 = model_transform.times(Mat4.translation(-45, 0, 0, 0))
+                                              .times(Mat4.translation(t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation6, this.materials.guppies);
+
+        let tail_transform6 = model_transform.times(Mat4.translation(-45.5, 0, 0, 0))
+                                             .times(Mat4.translation(t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(-73,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform6, this.materials.guppies);
+
+        let fish_transformation7 = model_transform.times(Mat4.translation(-25, 3, 0, 0))
+                                              .times(Mat4.translation(t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation7, this.materials.guppies);
+
+        let tail_transform7 = model_transform.times(Mat4.translation(-25.5, 3, 0, 0))
+                                             .times(Mat4.translation(t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(-73,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform7, this.materials.guppies);
+
+        let fish_transformation8 = model_transform.times(Mat4.translation(31, 15, 0, 0))
+                                              .times(Mat4.translation(-t*3,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+        this.shapes.fishbody.draw(context, program_state, fish_transformation8, this.materials.guppies);
+
+        let tail_transform8 = model_transform.times(Mat4.translation(31.5, 15, 0, 0))
+                                             .times(Mat4.translation(-t*3,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(74.61,0,0,1))
+        this.shapes.tail.draw(context, program_state, tail_transform8, this.materials.guppies);
+
     }
-}
 
-export class Assignment2 extends Base_Scene {  
-    set_colors() {
-        // TODO:  Create a class member variable to store your cube's colors.
-
-        // Fill array with 8 random colors, for 8 boxes
-        for (var i = 0; i < 8; i++) {
-            this.colorArray[i] = color(Math.random(), Math.random(), Math.random(), 1.0);
-        }
+     getRandomInt(min, max) {
+          min = Math.ceil(min);
+          max = Math.floor(max);
+          return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is exclusive and the minimum is inclusive
     }
 
-    make_control_panel() {
-        // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-
-        // If 'c' key is pressed --> set_colors() is called which generates a new set of random colors for the boxes
-        this.key_triggered_button("Change Colors", ["c"], this.set_colors);
-        
-        // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
-        this.key_triggered_button("Outline", ["o"], () => {
-            this.isOutlined = !this.isOutlined;
-        });
-
-        // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
-        this.key_triggered_button("Sit still", ["m"], () => {
-            this.isSwaying = !this.isSwaying;
-        });
-    }
-
-    draw_box(context, program_state, model_transform, boxNum) {
-        // TODO:  Helper function for requirement 3 (see hint).
-        //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
-
-        // Color of box, taken from an array of random colors 
-        const boxColor = this.colorArray[boxNum];
-        
-        // Make the stack of boxes sway like a blade of grass in the wind
-
-        // Time passed in seconds
-        const t = this.t = program_state.animation_time / 1000;
-        
-        // Maximum angle of 0.5*Math.PI
-        const maxAngle = .05 * Math.PI; 
-
-        // If swaying is turned off, stack of boxes must be extended to maximum possible angle
-        if (!this.isSwaying) {
-            var rotAngle = maxAngle;
-        }    
-        // If swaying is on, calculate rotation angle as a function of time
-        // Sways one direction per second --> sways back and forth per two seconds 
-        else {
-            var rotAngle = ((maxAngle/2)+(maxAngle/2)*(Math.sin(Math.PI*(t)))); // f(t) = a + b*sin(w*t)         
-        }                  
-
-        // First box does not sway
-        if (boxNum == 0) {
-            model_transform = model_transform.times(Mat4.scale(1, 1.5, 1))  
-        }
-        else {
-            model_transform = model_transform.times(Mat4.translation(-1, 1.5, 0))          // place hinge at top left edge of the box underneath
-                                             .times(Mat4.rotation(rotAngle, 0, 0, 1))      // rotate box over time
-                                             .times(Mat4.scale(1, 1.5, 1))                 // scale box by 1.5x its length along the Y axis
-                                             .times(Mat4.translation(1, 1, 0))             // stack box on top of previous box, connected by hinge
-        }
-
-        // If outline is on, draw white outline on box only
-        if (this.isOutlined) {
-            this.draw_outline(context, program_state, model_transform);    
-        }
-        // If outline is off, draw box normally (color, lighting, etc.)
-        else {
-            // Draw box 1,3,5,7 as a single triangle strip primitive 
-            if (this.isOdd(boxNum+1) == true) {
-                this.draw_triangle_strip(context,program_state, model_transform, boxColor);
-            }   
-            else {
-                this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:boxColor}));
-            }
-        }
-
-        // Reverse scale (1.5 = 3/2 --> 2/3), as to not scale exponentially 
-        model_transform = model_transform.times(Mat4.scale(1, (2/3), 1))
-        return model_transform;
-    }
-
-    draw_outline(context,program_state, model_transform) {
-        this.shapes.outline.draw(context, program_state, model_transform, this.white, "LINES");
-        return model_transform;
-    }
-
-    draw_triangle_strip(context, program_state, model_transform, boxColor) {
-        this.shapes.strip.draw(context, program_state, model_transform, this.materials.plastic.override({color:boxColor}), "TRIANGLE_STRIP");
-        return model_transform;
-    }
-
-    isOdd(number){
-        return (number%2) == 1;
-    }
-
-    display(context, program_state) {
-        super.display(context, program_state);
-        const blue = hex_color("#1a9ffa");
-        let model_transform = Mat4.identity();
-
-        // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
-
-        // Display a stack of 8 unit cubes starting from the origin and extending upward
-           for (let i = 0; i < 8; i++) {
-                model_transform = this.draw_box(context, program_state, model_transform, i);
-            }
-    }
 }

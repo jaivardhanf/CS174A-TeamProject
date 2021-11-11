@@ -32,7 +32,7 @@ export class Scene_To_Texture_Demo extends Scene {                   // **Scene_
         const bump = new defs.Fake_Bump_Map(1);
         this.materials =
             {
-                a: new Material(bump, {ambient: .5, texture: new Texture("assets/rgb.jpg")}),
+                a: new Material(bump, {ambient: .5, texture: new Texture("assets/background2.jpg")}),
                 b: new Material(bump, {ambient: .5, texture: new Texture("assets/earth.gif")}),
                 c: new Material(bump, {ambient: 1, texture: this.texture})
             }
