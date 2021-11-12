@@ -19,9 +19,12 @@ class Base_Scene extends Scene {
         this.scratchpad.height = 256;                // Initial image source: Blank gif file:
         this.texture = new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
         
+        this.change_lighting_color = false;
+        this.light_color = color(1,1,1,1);
+
         // Colors for Fish
         this.colorArray = [];
-        this.set_colors();
+        this.set_fish_colors();
 
         const bump = new defs.Fake_Bump_Map(1);
         const textured = new defs.Textured_Phong(1);
@@ -55,8 +58,8 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: .6, color: hex_color("#FFFFFF")}),
             guppies: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
-            sand: new Material(new defs.Phong_Shader(),
-                {ambient: 1, diffusivity: .6, color: hex_color("#9e9062")}),
+            sand: new Material(textured,
+                {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40")}),
             a: new Material(bump, {ambient: .5, texture: new Texture("assets/background2.jpg")}),
             b: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
             c: new Material(bump, {ambient: 1, texture: this.texture})
@@ -110,16 +113,24 @@ export class Assignment2 extends Base_Scene {
         this.key_triggered_button("Right", ['ArrowRight'], () => {
             this.x_movement = this.x_movement + 1; 
         });
+
+        this.key_triggered_button("Change Lighting Color", ['c'], () => {
+            this.change_lighting_color = true; 
+        });
     
     }
 
-    set_colors() {
-        // TODO:  Create a class member variable to store your cube's colors.
-
+    set_fish_colors() {
         // Fill two array with 50 random colors, for fishies
         for (var i = 0; i < 50; i++) {
             this.colorArray[i] = color(Math.random(), Math.random(), Math.random(), 1.0);
         }
+    }
+
+    set_light_color() {
+        // TODO:  Create a class member variable to store your cube's colors.
+
+        this.light_color = color(Math.random(), Math.random(), Math.random(), 1.0);
     }
 
     /* Drwas fishes coming from left*/
@@ -235,8 +246,13 @@ export class Assignment2 extends Base_Scene {
     display(context, program_state) {                                 // display():  Draw both scenes, clearing the buffer in between.
         let model_transform = Mat4.identity();
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        const light_position = vec4(-15, 20, 5, 1);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];        
+        const light_position = vec4(-5, 20, 5, 1);
+        program_state.lights = [new Light(light_position, this.light_color, 1000)];     
+           
+        if (this.change_lighting_color){
+            this.set_light_color();
+            this.change_lighting_color = false;
+        }
 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
