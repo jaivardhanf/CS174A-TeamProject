@@ -4,66 +4,6 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Shader, Texture, Material, Scene,
 } = tiny;
 
-
-class Cube extends Shape {
-    constructor() {
-        super("position", "normal",);
-        // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
-        this.arrays.position = Vector3.cast(
-            [-1, -1, -1], [1, -1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, -1], [-1, 1, -1], [1, 1, 1], [-1, 1, 1],
-            [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1], [1, -1, 1], [1, -1, -1], [1, 1, 1], [1, 1, -1],
-            [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1], [1, -1, -1], [-1, -1, -1], [1, 1, -1], [-1, 1, -1]);
-        this.arrays.normal = Vector3.cast(
-            [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, -1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],
-            [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0],
-            [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, -1], [0, 0, -1], [0, 0, -1], [0, 0, -1]);
-        // Arrange the vertices into a square shape in texture space too:
-        this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
-            14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
-    }
-}
-
-class Cube_Outline extends Shape {
-    constructor() {
-        super("position", "color");
-        // TODO (Requirement 5).
-        // When a set of lines is used in graphics, you should think of the list entries as
-        // broken down into pairs; each pair of vertices will be drawn as a line segment.
-        // Note: since the outline is rendered with Basic_shader, you need to redefine the position and color of each vertex
-
-        // Draw each cube’s outline (the edges) in white
-        this.arrays.position.push(...Vector3.cast(
-            [1,1,-1], [1,-1,-1], [-1,1,1], [-1,-1,1], [1,1,-1],  [-1,1,-1],  [1,1,1],  [-1,1,1],
-            [-1,-1,-1], [-1,-1,1], [-1,1,-1], [-1,1,1], [1,-1,1],  [1,-1,-1],  [1,1,1],  [1,1,-1],
-            [1,-1,1],  [-1,-1,1],  [1,-1,1],  [1,1,1], [1,-1,-1], [-1,-1,-1], [-1,-1,-1], [-1,1,-1]));
-
-        const white = color(1, 1, 1, 1);
-        for (let i = 0; i < 24; i++) {
-            this.arrays.color.push(white);
-        }
-
-        this.indexed = false;
-    }
-}
-
-class Cube_Single_Strip extends Shape {
-    constructor() {
-        super("position", "normal");
-        // TODO (Requirement 6)
-
-        this.arrays.position.push(...Vector3.cast(
-            [-1,-1,-1], [1,-1,-1], [-1,-1,1], [1,-1,1], 
-            [-1,1,-1], [1,1,-1], [-1,1,1], [1,1,1]));
-            
-        this.arrays.normal.push(...Vector3.cast(
-            [-1,-1,-1], [1,-1,-1], [-1,-1,1], [1,-1,1], 
-            [-1,1,-1], [1,1,-1], [-1,1,1], [1,1,1]));
-
-        this.indices.push(0, 1, 2, 3, 7, 2, 5, 0, 4, 2, 6, 7, 4, 5);
-    }
-}
-
-
 class Base_Scene extends Scene {
      // Base_scene is a Scene that can be added to any display canvas.
      // Setup the shapes, materials, camera, and lighting here.
@@ -78,6 +18,10 @@ class Base_Scene extends Scene {
         this.scratchpad.width = 256;
         this.scratchpad.height = 256;                // Initial image source: Blank gif file:
         this.texture = new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+        
+        // Colors for Fish
+        this.colorArray = [];
+        this.set_colors();
 
         const bump = new defs.Fake_Bump_Map(1);
         const textured = new defs.Textured_Phong(1);
@@ -86,26 +30,33 @@ class Base_Scene extends Scene {
         this.shapes = {
             box: new defs.Cube(),
             fishbody: new defs.Subdivision_Sphere(4),
+            turtlebody: new defs.Subdivision_Sphere(2),
+            sharkbody: new defs.Subdivision_Sphere(2),
+            egg: new defs.Subdivision_Sphere(4),
             box_2: new defs.Cube(),
             axis: new defs.Axis_Arrows(),
             waterbox: new defs.Subdivision_Sphere(4),
             tail: new defs.Triangle(),
+            sand: new defs.Capped_Cylinder(50, 50, [[0, 2], [0, 1]]),
+
         };
         
         // Materials
         this.materials = {
-            plastic: new Material(new defs.Phong_Shader(),
+            shark: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),
             eye: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#000000")}),
-            turtle: new Material(new defs.Phong_Shader(),
+            turtle: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#548a62")}),
-            turtlehead: new Material(new defs.Phong_Shader(),
+            turtlelimbs: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#33573c")}),
+            egg: new Material(new defs.Phong_Shader(),
+                {ambient: 1, diffusivity: .6, color: hex_color("#FFFFFF")}),
             guppies: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
-            blue: new Material(new defs.Phong_Shader(),
-                {ambient: 1, diffusivity: .6, color: hex_color("#2596be")}),
+            sand: new Material(new defs.Phong_Shader(),
+                {ambient: 1, diffusivity: .6, color: hex_color("#9e9062")}),
             a: new Material(bump, {ambient: .5, texture: new Texture("assets/background2.jpg")}),
             b: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
             c: new Material(bump, {ambient: 1, texture: this.texture})
@@ -139,9 +90,11 @@ class Base_Scene extends Scene {
 export class Assignment2 extends Base_Scene {  
 
     make_control_panel() {
+
         // Up Movement (arrow key up)
         this.key_triggered_button("Up", ['ArrowUp'], () => {
             this.y_movement = this.y_movement + 1;
+
         });
         // Down Movement (arrow key down)
         this.key_triggered_button("Down", ['ArrowDown'], () => {
@@ -160,26 +113,34 @@ export class Assignment2 extends Base_Scene {
     
     }
 
-    
+    set_colors() {
+        // TODO:  Create a class member variable to store your cube's colors.
+
+        // Fill two array with 50 random colors, for fishies
+        for (var i = 0; i < 50; i++) {
+            this.colorArray[i] = color(Math.random(), Math.random(), Math.random(), 1.0);
+        }
+    }
 
     /* Drwas fishes coming from left*/
     draw_fishes_left(context, program_state, model_transform, fish_count, t) { 
+            let fish_color = this.colorArray[fish_count];
             var x_cord = this.x_spawn_left[fish_count];
             var y_cord = this.y_spawn_left[fish_count];
             let speed = 3;
         /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
-        if(x_cord+((t-this.time_offsets_left[fish_count])*speed) < 25){
+        if(x_cord+((t-this.time_offsets_left[fish_count])*speed) < 25){             
             let fish_trans = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
                                               .times(Mat4.translation((t-this.time_offsets_left[fish_count])*speed,0,0,0))
                                               .times(Mat4.scale(0.8,0.6,0.5,1));
       
-            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies);
+            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies.override({color:fish_color}));
 
             let tail_trans = model_transform.times(Mat4.translation(x_cord-0.5, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_offsets_left[fish_count])*speed,0,0,0))
                                              .times(Mat4.scale(1,1,1,1))
                                              .times(Mat4.rotation(-73,0,0,1))
-            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies);
+            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies.override({color:fish_color}));
         /* If fish off screen, we update it the time offset since we use time to translate in above bracket
            Also updated coordinates so it looks more random
         */
@@ -187,12 +148,14 @@ export class Assignment2 extends Base_Scene {
             this.time_offsets_left[fish_count] = t;
             this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-100 +30) -30);
             this.y_spawn_left[fish_count] = Math.floor(Math.random() * 20);
-        }
+        }        
     }
     
 
     /* Draws fishes coming from right */    
     draw_fishes_right(context, program_state, model_transform, fish_count, t){
+        let fish_color = this.colorArray[fish_count * 5];
+        var fish = [];
         var x_cord = this.x_spawn_right[fish_count];
         var y_cord = this.y_spawn_right[fish_count];
         let speed = 3;
@@ -202,13 +165,13 @@ export class Assignment2 extends Base_Scene {
                                               .times(Mat4.translation(-(t-this.time_offsets_right[fish_count])*speed,0,0,0))
                                               .times(Mat4.scale(0.8,0.6,0.5,1));
       
-            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies);
+            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies.override({color:fish_color}));
 
             let tail_trans = model_transform.times(Mat4.translation(x_cord+0.5, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_offsets_right[fish_count])*speed,0,0,0))
                                              .times(Mat4.scale(1,1,1,1))
                                              .times(Mat4.rotation(74.61,0,0,1))
-            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies);
+            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies.override({color:fish_color}));
         /* If fish off screen, we update it the time offset since we use time to translate in above bracket
            Also updated coordinates so it looks more random
         */
@@ -231,30 +194,30 @@ export class Assignment2 extends Base_Scene {
             let shark_transform = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(3,1.5,1,1));
-            this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
+            this.shapes.sharkbody.draw(context, program_state, shark_transform, this.materials.shark);
 
             let eye_transform = model_transform.times(Mat4.translation(x_cord+2, y_cord, 0.8, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(0.1,0.1,0.1,1));
             this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
 
-            let tails_transform = model_transform.times(Mat4.translation(x_cord-3.03, y_cord, 0, 0))
+            let tails_transform = model_transform.times(Mat4.translation(x_cord-3, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-74.7,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
+            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.shark);
 
-            let tails2_transform = model_transform.times(Mat4.translation(x_cord-3.03, y_cord, 0, 0))
+            let tails2_transform = model_transform.times(Mat4.translation(x_cord-3, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-27.4,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
+            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.shark);
 
-            let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.5, 0, 0))
+            let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.2, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-145,0,0,1));
-            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
+            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.shark);
 
         /* 
            If shark off screen, we update it the time offset since we use time to translate in above above bracket
@@ -272,8 +235,7 @@ export class Assignment2 extends Base_Scene {
     display(context, program_state) {                                 // display():  Draw both scenes, clearing the buffer in between.
         let model_transform = Mat4.identity();
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-
-        const light_position = vec4(0, 5, 5, 1);
+        const light_position = vec4(-15, 20, 5, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];        
 
         if (!context.scratchpad.controls) {
@@ -304,7 +266,7 @@ export class Assignment2 extends Base_Scene {
         let background_transform = model_transform;
         background_transform = background_transform.times(Mat4.rotation(0, 0, 1, 0))
                                                    .times(Mat4.translation(0, 0, 0, 0))
-                                                   .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+                                                   .times(Mat4.rotation(Math.PI/1.5 , 1, 0, 0))
                                                    .times(Mat4.scale(60, 60, 60))
                                                    .times(Mat4.rotation(t/50, 0, 1, 0));
 
@@ -312,103 +274,49 @@ export class Assignment2 extends Base_Scene {
         this.shapes.waterbox.draw(context, program_state, background_transform, this.materials.b);
         // this.shapes.box.draw(context, program_state, model_transform, this.materials.plastic);
 
-        // Up Count (movement control) 
+        let sand_transform = model_transform.times(Mat4.rotation(0, 0, 1, 0))
+                                            .times(Mat4.translation(0,0,0,0))
+                                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+                                            .times(Mat4.translation(0, 0, 2))
+                                            .times(Mat4.scale(50, 25, 0.5));
+
+        this.shapes.sand.draw(context, program_state, sand_transform, this.materials.sand);
+
+        // X,Y for turtle position --> controlled by player using arrow keys 
         var y = this.y_movement;
         var x = this.x_movement;
 
-        //Turtle Draw Body
+        // Draw Turtle 
         let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
                                                .times(Mat4.translation(x/2,y/4,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
+        this.shapes.turtlebody.draw(context, program_state, turtle_transform, this.materials.turtle);
 
-        let turtle2_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
-                                               .times(Mat4.scale(0.5,0.5,0.2,0))
+        let turtle_head_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
+                                               .times(Mat4.scale(0.5,0.5,0.4,0))
                                                .times(Mat4.translation(x*1.5,y/1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle2_transform, this.materials.turtlehead);
+        this.shapes.turtlebody.draw(context, program_state, turtle_head_transform, this.materials.turtlelimbs);
 
         
-        let turtle3_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
+        let turtle_leg_tl_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, this.materials.turtlelimbs);
         
-        let turtle4_transform = model_transform.times(Mat4.translation(-1.6, -0.7, 0, 0))
+        let turtle_leg_bl_transform = model_transform.times(Mat4.translation(-1.6, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
         
-        let turtle5_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
+        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
         
-        let turtle6_transform = model_transform.times(Mat4.translation(1.55, -0.7, 0, 0))
+        let turtle_leg_br_transform = model_transform.times(Mat4.translation(1.55, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
-
-/*
-        let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
-                                               .times(Mat4.translation(x/2,y/4,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
-
-        let turtle2_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
-                                               .times(Mat4.scale(0.5,0.5,0.2,0))
-                                               .times(Mat4.translation(x*1.5,y/1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle2_transform, this.materials.turtlehead);
-
-        let turtle3_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
-
-        let turtle4_transform = model_transform.times(Mat4.translation(-1.5, -0.7, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
-
-        let turtle5_transform = model_transform.times(Mat4.translation(1.6, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
-        
-        let turtle6_transform = model_transform.times(Mat4.translation(1.5, -0.7, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
-*/
-        //Turtle End Draw
-        /*
-        let shark_transform = model_transform.times(Mat4.translation(-30, 15, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(3,1.5,1,1));
-        this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
-
-        let eye_transform = model_transform.times(Mat4.translation(-28, 15, 0.8, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(0.1,0.1,0.1,1));
-        this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
-
-        let tails_transform = model_transform.times(Mat4.translation(-33.03, 15, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(2,1.5,1,1))
-                                             .times(Mat4.rotation(-74.7,0,0,1));
-        this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
-
-        let tails2_transform = model_transform.times(Mat4.translation(-33.03, 15, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(2,1.5,1,1))
-                                             .times(Mat4.rotation(-27.4,0,0,1));
-        this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
-
-        let fin_transform = model_transform.times(Mat4.translation(-30.5, 16.5, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(2,1.5,1,1))
-                                             .times(Mat4.rotation(-145,0,0,1));
-        this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
-        */
-
-        
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, this.materials.turtlelimbs);
+       
         let left_fish_count = 5;
         let right_fish_count = 5;
         let shark_left_count = 3;
@@ -427,10 +335,153 @@ export class Assignment2 extends Base_Scene {
 
     }
 
-     getRandomInt(min, max) {
-          min = Math.ceil(min);
-          max = Math.floor(max);
-          return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+class Gouraud_Shader extends Shader {
+    // This is a Shader using Phong_Shader as template
+    // TODO: Modify the glsl coder here to create a Gouraud Shader (Planet 2)
+
+    constructor(num_lights = 2) {
+        super();
+        this.num_lights = num_lights;
     }
 
+    shared_glsl_code() {
+        // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
+        return ` 
+        precision mediump float;
+        const int N_LIGHTS = ` + this.num_lights + `;
+        uniform float ambient, diffusivity, specularity, smoothness;
+        uniform vec4 light_positions_or_vectors[N_LIGHTS], light_colors[N_LIGHTS];
+        uniform float light_attenuation_factors[N_LIGHTS];
+        uniform vec4 shape_color;
+        uniform vec3 squared_scale, camera_center;
+
+        // Specifier "varying" means a variable's final value will be passed from the vertex shader
+        // on to the next phase (fragment shader), then interpolated per-fragment, weighted by the
+        // pixel fragment's proximity to each of the 3 vertices (barycentric interpolation).
+        varying vec3 N, vertex_worldspace;
+        varying vec4 vertex_color;
+
+        // ***** PHONG SHADING HAPPENS HERE: *****                                       
+        vec3 phong_model_lights( vec3 N, vec3 vertex_worldspace ){                                        
+            // phong_model_lights():  Add up the lights' contributions.
+            vec3 E = normalize( camera_center - vertex_worldspace );
+            vec3 result = vec3( 0.0 );
+            for(int i = 0; i < N_LIGHTS; i++){
+                // Lights store homogeneous coords - either a position or vector.  If w is 0, the 
+                // light will appear directional (uniform direction from all points), and we 
+                // simply obtain a vector towards the light by directly using the stored value.
+                // Otherwise if w is 1 it will appear as a point light -- compute the vector to 
+                // the point light's location from the current surface point.  In either case, 
+                // fade (attenuate) the light as the vector needed to reach it gets longer.  
+                vec3 surface_to_light_vector = light_positions_or_vectors[i].xyz - 
+                                               light_positions_or_vectors[i].w * vertex_worldspace;                                             
+                float distance_to_light = length( surface_to_light_vector );
+
+                vec3 L = normalize( surface_to_light_vector );
+                vec3 H = normalize( L + E );
+                // Compute the diffuse and specular components from the Phong
+                // Reflection Model, using Blinn's "halfway vector" method:
+                float diffuse  =      max( dot( N, L ), 0.0 );
+                float specular = pow( max( dot( N, H ), 0.0 ), smoothness );
+                float attenuation = 1.0 / (1.0 + light_attenuation_factors[i] * distance_to_light * distance_to_light );
+                
+                vec3 light_contribution = shape_color.xyz * light_colors[i].xyz * diffusivity * diffuse
+                                                          + light_colors[i].xyz * specularity * specular;
+                result += attenuation * light_contribution;
+            }
+            return result;
+        } `;
+    }
+
+    vertex_glsl_code() {
+        // ********* VERTEX SHADER *********
+        return this.shared_glsl_code() + `
+            attribute vec3 position, normal;                            
+            // Position is expressed in object coordinates.
+            
+            uniform mat4 model_transform;
+            uniform mat4 projection_camera_model_transform;
+    
+            void main(){                                                                   
+                // The vertex's final resting place (in NDCS):
+                gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
+                // The final normal vector in screen space.
+                N = normalize( mat3( model_transform ) * normal / squared_scale);
+                vertex_worldspace = ( model_transform * vec4( position, 1.0 ) ).xyz;
+
+                vertex_color = vec4(shape_color.xyz * ambient, shape_color.w);
+                vertex_color.xyz += phong_model_lights(N, vertex_worldspace);
+            } `;
+    }
+
+    fragment_glsl_code() {
+        // ********* FRAGMENT SHADER *********
+        // A fragment is a pixel that's overlapped by the current triangle.
+        // Fragments affect the final image or get discarded due to depth.
+        return this.shared_glsl_code() + `
+            void main(){
+                gl_FragColor = vertex_color;
+                return;
+            } `;
+    }
+
+    send_material(gl, gpu, material) {
+        // send_material(): Send the desired shape-wide material qualities to the
+        // graphics card, where they will tweak the Phong lighting formula.
+        gl.uniform4fv(gpu.shape_color, material.color);
+        gl.uniform1f(gpu.ambient, material.ambient);
+        gl.uniform1f(gpu.diffusivity, material.diffusivity);
+        gl.uniform1f(gpu.specularity, material.specularity);
+        gl.uniform1f(gpu.smoothness, material.smoothness);
+    }
+
+    send_gpu_state(gl, gpu, gpu_state, model_transform) {
+        // send_gpu_state():  Send the state of our whole drawing context to the GPU.
+        const O = vec4(0, 0, 0, 1), camera_center = gpu_state.camera_transform.times(O).to3();
+        gl.uniform3fv(gpu.camera_center, camera_center);
+        // Use the squared scale trick from "Eric's blog" instead of inverse transpose matrix:
+        const squared_scale = model_transform.reduce(
+            (acc, r) => {
+                return acc.plus(vec4(...r).times_pairwise(r))
+            }, vec4(0, 0, 0, 0)).to3();
+        gl.uniform3fv(gpu.squared_scale, squared_scale);
+        // Send the current matrices to the shader.  Go ahead and pre-compute
+        // the products we'll need of the of the three special matrices and just
+        // cache and send those.  They will be the same throughout this draw
+        // call, and thus across each instance of the vertex shader.
+        // Transpose them since the GPU expects matrices as column-major arrays.
+        const PCM = gpu_state.projection_transform.times(gpu_state.camera_inverse).times(model_transform);
+        gl.uniformMatrix4fv(gpu.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
+        gl.uniformMatrix4fv(gpu.projection_camera_model_transform, false, Matrix.flatten_2D_to_1D(PCM.transposed()));
+
+        // Omitting lights will show only the material color, scaled by the ambient term:
+        if (!gpu_state.lights.length)
+            return;
+
+        const light_positions_flattened = [], light_colors_flattened = [];
+        for (let i = 0; i < 4 * gpu_state.lights.length; i++) {
+            light_positions_flattened.push(gpu_state.lights[Math.floor(i / 4)].position[i % 4]);
+            light_colors_flattened.push(gpu_state.lights[Math.floor(i / 4)].color[i % 4]);
+        }
+        gl.uniform4fv(gpu.light_positions_or_vectors, light_positions_flattened);
+        gl.uniform4fv(gpu.light_colors, light_colors_flattened);
+        gl.uniform1fv(gpu.light_attenuation_factors, gpu_state.lights.map(l => l.attenuation));
+    }
+
+    update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
+        // update_GPU(): Define how to synchronize our JavaScript's variables to the GPU's.  This is where the shader
+        // recieves ALL of its inputs.  Every value the GPU wants is divided into two categories:  Values that belong
+        // to individual objects being drawn (which we call "Material") and values belonging to the whole scene or
+        // program (which we call the "Program_State").  Send both a material and a program state to the shaders
+        // within this function, one data field at a time, to fully initialize the shader for a draw.
+
+        // Fill in any missing fields in the Material object with custom defaults for this shader:
+        const defaults = {color: color(0, 0, 0, 1), ambient: 0, diffusivity: 1, specularity: 1, smoothness: 40};
+        material = Object.assign({}, defaults, material);
+
+        this.send_material(context, gpu_addresses, material);
+        this.send_gpu_state(context, gpu_addresses, gpu_state, model_transform);
+    }
 }
