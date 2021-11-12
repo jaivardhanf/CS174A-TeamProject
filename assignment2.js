@@ -111,8 +111,27 @@ class Base_Scene extends Scene {
             c: new Material(bump, {ambient: 1, texture: this.texture})
         };
 
+        /* Turtle coordinates */
         this.y_movement = 0;
         this.x_movement = 0;
+        
+        /* Coordinates and time offsets for fishes & sharks */
+        this.x_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * (-100 +30) -30));
+        this.y_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.time_offsets_left = Array(5).fill(0);
+
+        this.x_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (100 - 30) + 30));
+        this.y_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.time_offsets_right = Array(5).fill(0);
+
+        this.x_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * (-100 + 30) -30));
+        this.y_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.time_shark_offsets_left = Array(5).fill(0);
+
+        this.x_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (50 - 30) + 30));
+        this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.time_shark_offsets_right = Array(5).fill(0);        
+
 ;
     }
 }
@@ -140,6 +159,115 @@ export class Assignment2 extends Base_Scene {
         });
     
     }
+
+    
+
+    /* Drwas fishes coming from left*/
+    draw_fishes_left(context, program_state, model_transform, fish_count, t) { 
+            var x_cord = this.x_spawn_left[fish_count];
+            var y_cord = this.y_spawn_left[fish_count];
+            let speed = 3;
+        /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
+        if(x_cord+((t-this.time_offsets_left[fish_count])*speed) < 25){
+            let fish_trans = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
+                                              .times(Mat4.translation((t-this.time_offsets_left[fish_count])*speed,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies);
+
+            let tail_trans = model_transform.times(Mat4.translation(x_cord-0.5, y_cord, 0, 0))
+                                             .times(Mat4.translation((t-this.time_offsets_left[fish_count])*speed,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(-73,0,0,1))
+            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies);
+        /* If fish off screen, we update it the time offset since we use time to translate in above bracket
+           Also updated coordinates so it looks more random
+        */
+        }else{
+            this.time_offsets_left[fish_count] = t;
+            this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-100 +30) -30);
+            this.y_spawn_left[fish_count] = Math.floor(Math.random() * 20);
+        }
+    }
+    
+
+    /* Draws fishes coming from right */    
+    draw_fishes_right(context, program_state, model_transform, fish_count, t){
+        var x_cord = this.x_spawn_right[fish_count];
+        var y_cord = this.y_spawn_right[fish_count];
+        let speed = 3;
+        /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
+        if(x_cord-((t-this.time_offsets_right[fish_count])*speed) > -35){
+            let fish_trans = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
+                                              .times(Mat4.translation(-(t-this.time_offsets_right[fish_count])*speed,0,0,0))
+                                              .times(Mat4.scale(0.8,0.6,0.5,1));
+      
+            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies);
+
+            let tail_trans = model_transform.times(Mat4.translation(x_cord+0.5, y_cord, 0, 0))
+                                             .times(Mat4.translation(-(t-this.time_offsets_right[fish_count])*speed,0,0,0))
+                                             .times(Mat4.scale(1,1,1,1))
+                                             .times(Mat4.rotation(74.61,0,0,1))
+            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies);
+        /* If fish off screen, we update it the time offset since we use time to translate in above bracket
+           Also updated coordinates so it looks more random
+        */
+        }else{
+            this.time_offsets_right[fish_count] = t;
+            this.x_spawn_right[fish_count] = Math.floor(Math.random() * (100 - 30) + 30);
+            this.y_spawn_right[fish_count] = Math.floor(Math.random() * 20);
+        }
+        
+    }
+
+    draw_shark_left(context, program_state, model_transform, shark_count, t){
+        var x_cord = this.x_shark_spawn_left[shark_count];
+        var y_cord = this.y_shark_spawn_left[shark_count];
+        let speed = 1;
+        
+        /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
+
+        if(x_cord+((t-this.time_shark_offsets_left[shark_count])*speed) < 25){
+            let shark_transform = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
+                                             .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(3,1.5,1,1));
+            this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
+
+            let eye_transform = model_transform.times(Mat4.translation(x_cord+2, y_cord, 0.8, 0))
+                                             .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(0.1,0.1,0.1,1));
+            this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
+
+            let tails_transform = model_transform.times(Mat4.translation(x_cord-3.03, y_cord, 0, 0))
+                                             .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-74.7,0,0,1));
+            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
+
+            let tails2_transform = model_transform.times(Mat4.translation(x_cord-3.03, y_cord, 0, 0))
+                                             .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-27.4,0,0,1));
+            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
+
+            let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.5, 0, 0))
+                                             .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-145,0,0,1));
+            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
+
+        /* 
+           If shark off screen, we update it the time offset since we use time to translate in above above bracket
+           Also updated coordinates so it looks more random
+        */
+        }else{
+            this.time_shark_offsets_left[shark_count] = t;
+            this.x_shark_spawn_left[shark_count] = Math.floor(Math.random() * (-100 + 30) - 30);
+            this.y_shark_spawn_left[shark_count] = Math.floor(Math.random() * 20);
+        }
+
+    }
+    
 
     display(context, program_state) {                                 // display():  Draw both scenes, clearing the buffer in between.
         let model_transform = Mat4.identity();
@@ -188,6 +316,38 @@ export class Assignment2 extends Base_Scene {
         var y = this.y_movement;
         var x = this.x_movement;
 
+        //Turtle Draw Body
+        let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
+                                               .times(Mat4.translation(x/2,y/4,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
+
+        let turtle2_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
+                                               .times(Mat4.scale(0.5,0.5,0.2,0))
+                                               .times(Mat4.translation(x*1.5,y/1.1,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle2_transform, this.materials.turtlehead);
+
+        
+        let turtle3_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
+        
+        let turtle4_transform = model_transform.times(Mat4.translation(-1.6, -0.7, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
+        
+        let turtle5_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
+        
+        let turtle6_transform = model_transform.times(Mat4.translation(1.55, -0.7, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
+
+/*
         let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
                                                .times(Mat4.translation(x/2,y/4,0,0));
         this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
@@ -211,13 +371,14 @@ export class Assignment2 extends Base_Scene {
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x/1.1,y,0,0));
         this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
-
+        
         let turtle6_transform = model_transform.times(Mat4.translation(1.5, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x/1.1,y,0,0));
         this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
-
-
+*/
+        //Turtle End Draw
+        /*
         let shark_transform = model_transform.times(Mat4.translation(-30, 15, 0, 0))
                                              .times(Mat4.translation(t,0,0,0))
                                              .times(Mat4.scale(3,1.5,1,1));
@@ -245,104 +406,24 @@ export class Assignment2 extends Base_Scene {
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-145,0,0,1));
         this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
+        */
 
-        let fish_transformation = model_transform.times(Mat4.translation(20, 20, 0, 0))
-                                             .times(Mat4.translation(-t*3,0,0,0))
-                                             .times(Mat4.scale(0.8,0.6,0.5,1));
+        
+        let left_fish_count = 5;
+        let right_fish_count = 5;
+        let shark_left_count = 3;
+        let shark_right_count = 5;
+        
+        for(let i = 0; i < left_fish_count; i++){
+            this.draw_fishes_left(context, program_state, model_transform, i, t);
+        }
+        for(let i = 0; i < right_fish_count; i++){
+            this.draw_fishes_right(context, program_state, model_transform, i, t);
+        }
+        for(let i = 0; i < shark_left_count; i++){
+            this.draw_shark_left(context, program_state, model_transform, i, t);
+        }
 
-        this.shapes.fishbody.draw(context, program_state, fish_transformation, this.materials.guppies);
-
-        let tail_transform = model_transform.times(Mat4.translation(20.5, 20, 0, 0))
-                                             .times(Mat4.translation(-t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(74.61,0,0,1));
-        this.shapes.tail.draw(context, program_state, tail_transform, this.materials.guppies);
-
-
-
-        let fish_transformation2 = model_transform.times(Mat4.translation(-37, 10, 0, 0))
-                                              .times(Mat4.translation(t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation2, this.materials.guppies);
-
-        let tail_transform2 = model_transform.times(Mat4.translation(-37.5, 10, 0, 0))
-                                             .times(Mat4.translation(t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(-73,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform2, this.materials.guppies);
-
-        let fish_transformation3 = model_transform.times(Mat4.translation(37, 17, 0, 0))
-                                              .times(Mat4.translation(-t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation3, this.materials.guppies);
-
-        let tail_transform3 = model_transform.times(Mat4.translation(37.5, 17, 0, 0))
-                                             .times(Mat4.translation(-t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(74.61,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform3, this.materials.guppies);
-
-        let fish_transformation4 = model_transform.times(Mat4.translation(35, 7, 0, 0))
-                                              .times(Mat4.translation(-t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation4, this.materials.guppies);
-
-        let tail_transform4 = model_transform.times(Mat4.translation(35.5, 7, 0, 0))
-                                             .times(Mat4.translation(-t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(74.61,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform4, this.materials.guppies);
-
-        let fish_transformation5 = model_transform.times(Mat4.translation(-48, 12, 0, 0))
-                                              .times(Mat4.translation(t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation5, this.materials.guppies);
-
-        let tail_transform5 = model_transform.times(Mat4.translation(-48.5, 12, 0, 0))
-                                             .times(Mat4.translation(t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(-73,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform5, this.materials.guppies);
-
-        let fish_transformation6 = model_transform.times(Mat4.translation(-45, 0, 0, 0))
-                                              .times(Mat4.translation(t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation6, this.materials.guppies);
-
-        let tail_transform6 = model_transform.times(Mat4.translation(-45.5, 0, 0, 0))
-                                             .times(Mat4.translation(t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(-73,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform6, this.materials.guppies);
-
-        let fish_transformation7 = model_transform.times(Mat4.translation(-25, 3, 0, 0))
-                                              .times(Mat4.translation(t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation7, this.materials.guppies);
-
-        let tail_transform7 = model_transform.times(Mat4.translation(-25.5, 3, 0, 0))
-                                             .times(Mat4.translation(t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(-73,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform7, this.materials.guppies);
-
-        let fish_transformation8 = model_transform.times(Mat4.translation(31, 15, 0, 0))
-                                              .times(Mat4.translation(-t*3,0,0,0))
-                                              .times(Mat4.scale(0.8,0.6,0.5,1));
-      
-        this.shapes.fishbody.draw(context, program_state, fish_transformation8, this.materials.guppies);
-
-        let tail_transform8 = model_transform.times(Mat4.translation(31.5, 15, 0, 0))
-                                             .times(Mat4.translation(-t*3,0,0,0))
-                                             .times(Mat4.scale(1,1,1,1))
-                                             .times(Mat4.rotation(74.61,0,0,1))
-        this.shapes.tail.draw(context, program_state, tail_transform8, this.materials.guppies);
 
     }
 
