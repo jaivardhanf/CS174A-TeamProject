@@ -128,15 +128,41 @@ class Base_Scene extends Scene {
         this.y_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
         this.time_shark_offsets_left = Array(5).fill(0);
 
-        this.x_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (50 - 30) + 30));
+        this.x_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (100 - 30) + 30));
         this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
-        this.time_shark_offsets_right = Array(5).fill(0);        
+        this.time_shark_offsets_right = Array(5).fill(0);
+
+        
+        this.turtle_body_global = Mat4.identity();
+        this.turtle_head_global = Mat4.identity();
+        this.turtle_larm_global = Mat4.identity();
+        this.turtle_rarm_global = Mat4.identity();
+        this.turtle_lleg_global = Mat4.identity();
+        this.turtle_rleg_global = Mat4.identity();
+
+        this.collision_count = 0;
+         
+
+
 
 ;
     }
 }
 
 export class Assignment2 extends Base_Scene {  
+
+    turtle_south(){
+        //const t = program_state.animation_time / 1000;
+        console.log("Turtle south called");
+        //this.turtle_body_global = this.turtle_body_global.times(Mat4.rotation(-180,0,0,1));
+        //this.turtle_head_global = this.turtle_head_global.times(Mat4.rotation(-180,0,90,1));
+        //this.turtle_larm_global = this.turtle_larm_global.times(Mat4.rotation(0,0,90,0));
+        //this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.rotation(0,0,90,0));
+        //this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.rotation(0,0,90,0));
+        //this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.rotation(0,0,90,0));
+    }
+
+
 
     make_control_panel() {
         // Up Movement (arrow key up)
@@ -146,6 +172,8 @@ export class Assignment2 extends Base_Scene {
         // Down Movement (arrow key down)
         this.key_triggered_button("Down", ['ArrowDown'], () => {
             this.y_movement = this.y_movement - 1; 
+            this.turtle_south();
+
         });
         
         // Left Movement (arrow key left)
@@ -162,11 +190,30 @@ export class Assignment2 extends Base_Scene {
 
     
 
-    /* Drwas fishes coming from left*/
-    draw_fishes_left(context, program_state, model_transform, fish_count, t) { 
+    new_fish_cord_left(fish_count){
+        this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-100 +30) -30);
+        this.y_spawn_left[fish_count] = Math.floor(Math.random() * 20);
+    }
+
+    new_fish_cord_right(fish_count){
+        this.x_spawn_right[fish_count] = Math.floor(Math.random() * (100 - 30) + 30);
+        this.y_spawn_right[fish_count] = Math.floor(Math.random() * 20);
+    }
+
+    new_shark_cord_left(shark_count){
+        this.x_shark_spawn_left[shark_count] = Math.floor(Math.random() * (-100 +30) -30);
+        this.y_shark_spawn_left[shark_count] = Math.floor(Math.random() * 20);
+    }
+
+    new_shark_cord_right(shark_count){
+        this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (100 - 30) + 30);
+        this.y_shark_spawn_right[shark_count] = Math.floor(Math.random() * 20);
+    }
+
+    /* Draws fishes coming from left*/
+    draw_fishes_left(context, program_state, model_transform, fish_count, t, speed) { 
             var x_cord = this.x_spawn_left[fish_count];
             var y_cord = this.y_spawn_left[fish_count];
-            let speed = 3;
         /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
         if(x_cord+((t-this.time_offsets_left[fish_count])*speed) < 25){
             let fish_trans = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
@@ -185,17 +232,15 @@ export class Assignment2 extends Base_Scene {
         */
         }else{
             this.time_offsets_left[fish_count] = t;
-            this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-100 +30) -30);
-            this.y_spawn_left[fish_count] = Math.floor(Math.random() * 20);
+            this.new_fish_cord_left[fish_count];
         }
     }
     
 
     /* Draws fishes coming from right */    
-    draw_fishes_right(context, program_state, model_transform, fish_count, t){
+    draw_fishes_right(context, program_state, model_transform, fish_count, t, speed){
         var x_cord = this.x_spawn_right[fish_count];
         var y_cord = this.y_spawn_right[fish_count];
-        let speed = 3;
         /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
         if(x_cord-((t-this.time_offsets_right[fish_count])*speed) > -35){
             let fish_trans = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
@@ -214,16 +259,15 @@ export class Assignment2 extends Base_Scene {
         */
         }else{
             this.time_offsets_right[fish_count] = t;
-            this.x_spawn_right[fish_count] = Math.floor(Math.random() * (100 - 30) + 30);
-            this.y_spawn_right[fish_count] = Math.floor(Math.random() * 20);
+            this.new_fish_cord_right[fish_count];
+
         }
         
     }
 
-    draw_shark_left(context, program_state, model_transform, shark_count, t){
+    draw_shark_left(context, program_state, model_transform, shark_count, t, speed){
         var x_cord = this.x_shark_spawn_left[shark_count];
         var y_cord = this.y_shark_spawn_left[shark_count];
-        let speed = 1;
         
         /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
 
@@ -267,7 +311,153 @@ export class Assignment2 extends Base_Scene {
         }
 
     }
+
+    draw_shark_right(context, program_state, model_transform, shark_count, t, speed){
+        var x_cord = this.x_shark_spawn_right[shark_count];
+        var y_cord = this.y_shark_spawn_right[shark_count];
+        
+        /* Checks if current x-coord is offscreen, if its not it just keeps swimming :) */
+        if(x_cord-((t-this.time_shark_offsets_right[shark_count])*speed) > -35){
+            let shark_transform = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
+                                             .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(3,1.5,1,1));
+            this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
+
+            let eye_transform = model_transform.times(Mat4.translation(x_cord-2, y_cord, 0.8, 0))
+                                             .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(0.1,0.1,0.1,1));
+            this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
+
+            let tails_transform = model_transform.times(Mat4.translation(x_cord+3.03, y_cord, 0, 0))
+                                             .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(20,0,0,1));
+            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
+
+            let tails2_transform = model_transform.times(Mat4.translation(x_cord+3.03, y_cord, 0, 0))
+                                             .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(60,0,0,1));
+            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
+
+            let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.5, 0, 0))
+                                             .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
+                                             .times(Mat4.scale(2,1.5,1,1))
+                                             .times(Mat4.rotation(-145,0,0,1));
+            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
+
+        /* 
+           If shark off screen, we update it the time offset since we use time to translate in above above bracket
+           Also updated coordinates so it looks more random
+        */
+        }else{
+            this.time_shark_offsets_right[shark_count] = t;
+            this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (100 - 30) + 30);
+            this.y_shark_spawn_right[shark_count] = Math.floor(Math.random() * 20);
+        }
+
+    }
+
+    collision_scale(){
+        this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(1.1,1.1,1,0));
+        this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(1.1,1.1,1.1,0))
+                                                         .times(Mat4.translation(0,0.3,0));
+        
+
+        this.turtle_larm_global = this.turtle_larm_global.times(Mat4.scale(1.1,1.1,1.1,0))
+                                                         .times(Mat4.translation(-0.15,0.15,0));
     
+        this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.scale(1.1,1.1,1.1,0))
+                                                         .times(Mat4.translation(0.15,0.15,0));
+        
+        this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.scale(1.1,1.1,1.1,0))
+                                                         .times(Mat4.translation(-0.15,-0.15,0));
+        
+        this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(1.1,1.1,1.1,0))
+                                                         .times(Mat4.translation(0.15,-0.15,0));
+        this.collision_count = this.collision_count + 1;
+    }
+
+    collision_unscale(){
+        this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(0.9,0.9,0.9,0));
+        this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(0.9,0.9,0.9,0))
+                                                         .times(Mat4.translation(0,-0.3,0));
+        
+
+        this.turtle_larm_global = this.turtle_larm_global.times(Mat4.scale(0.9,0.9,0.9,0))
+                                                         .times(Mat4.translation(0.15,-0.15,0));
+    
+        this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.scale(0.9,0.9,0.9,0))
+                                                         .times(Mat4.translation(-0.15,-0.15,0));
+        
+        this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.scale(0.9,0.9,0.9,0))
+                                                         .times(Mat4.translation(0.15,0.15,0));
+        
+        this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(0.9,0.9,0.9,0))
+                                                         .times(Mat4.translation(-0.15,0.15,0));
+        this.collision_count = this.collision_count - 1;
+    }
+
+
+    detect_fish_collision_left(fish_count, t, speed){
+        let fish_x_cord = this.x_spawn_left[fish_count] + ((t-this.time_offsets_left[fish_count])*speed);
+        let fish_y_cord = this.y_spawn_left[fish_count];
+        let turtle_x = this.x_movement;
+        let turtle_y = this.y_movement;
+        //turtle_x bounds:[-36, 23] turtle_y bounds: [-6.5, 49] 
+        //fish_x_cord bounds [-27,17] fish_y_cord bounds [-3.5 ,22]
+        //fish_x_cord converted to turtle_x coords using equation: Turtle-X_cord = fish_x_cord(59/44) - 9/44
+        //fish_x_cord converted to turtle_x coords using equation: Turtle-Y_cord = fish_y_cord(59/44) - 9/44
+        let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
+        let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
+        if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
+            this.new_fish_cord_left(fish_count);
+            this.collision_scale();         
+        }
+    }
+
+    detect_fish_collision_right(fish_count, t, speed){
+        let fish_x_cord = this.x_spawn_right[fish_count] - ((t-this.time_offsets_right[fish_count])*speed);
+        let fish_y_cord = this.y_spawn_right[fish_count];
+        let turtle_x = this.x_movement;
+        let turtle_y = this.y_movement;
+        let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
+        let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
+        if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
+            this.new_fish_cord_right(fish_count);
+            this.collision_scale();
+        }
+    }
+
+    detect_shark_collision_left(shark_count, t, speed){
+        let shark_x_cord = this.x_shark_spawn_left[shark_count] + ((t-this.time_shark_offsets_left[shark_count])*speed);
+        let shark_y_cord = this.y_shark_spawn_left[shark_count];
+        let turtle_x = this.x_movement;
+        let turtle_y = this.y_movement;
+        let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
+        let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
+            this.new_shark_cord_left(shark_count);
+            if(this.collision_count > 0){
+                this.collision_unscale();
+            }
+        }
+    }
+
+    detect_shark_collision_right(shark_count, t, speed){
+        let shark_x_cord = this.x_shark_spawn_right[shark_count] - ((t-this.time_shark_offsets_right[shark_count])*speed);
+        let shark_y_cord = this.y_shark_spawn_right[shark_count];
+        let turtle_x = this.x_movement;
+        let turtle_y = this.y_movement;
+        let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
+        let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
+            this.new_shark_cord_right(shark_count);
+            if(this.collision_count > 0){
+                this.collision_unscale();
+            }
+        }
+    }
 
     display(context, program_state) {                                 // display():  Draw both scenes, clearing the buffer in between.
         let model_transform = Mat4.identity();
@@ -311,120 +501,72 @@ export class Assignment2 extends Base_Scene {
         // Draw Background
         this.shapes.waterbox.draw(context, program_state, background_transform, this.materials.b);
         // this.shapes.box.draw(context, program_state, model_transform, this.materials.plastic);
+        let left_fish_count = 1;
+        let right_fish_count = 1;
+        let shark_left_count = 1;
+        let shark_right_count = 5;
+        let fish_speed = 3;
+        let shark_speed = 3;
+        
+        for(let i = 0; i < left_fish_count; i++){
+            this.draw_fishes_left(context, program_state, model_transform, i, t, fish_speed);
+            this.detect_fish_collision_left(i, t, fish_speed);
+        }
+        for(let i = 0; i < right_fish_count; i++){
+            this.draw_fishes_right(context, program_state, model_transform, i, t, fish_speed);
+            this.detect_fish_collision_right(i, t, fish_speed);
+        }
+        for(let i = 0; i < shark_left_count; i++){
+            this.draw_shark_left(context, program_state, model_transform, i, t, shark_speed);
+            this.detect_shark_collision_left(i, t, shark_speed);
+        }
+        for(let i = 0; i < shark_right_count; i++){
+            this.draw_shark_right(context, program_state, model_transform, i, t, shark_speed);
+            this.detect_shark_collision_right(i, t, shark_speed);
+
+        }
 
         // Up Count (movement control) 
         var y = this.y_movement;
         var x = this.x_movement;
 
         //Turtle Draw Body
-        let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
-                                               .times(Mat4.translation(x/2,y/4,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
+        var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
+                                               .times(Mat4.translation(x/2,y/4,0,0))
+                                               .times(this.turtle_body_global);
 
-        let turtle2_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
+        let turtle_head = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
                                                .times(Mat4.scale(0.5,0.5,0.2,0))
-                                               .times(Mat4.translation(x*1.5,y/1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle2_transform, this.materials.turtlehead);
-
+                                               .times(Mat4.translation(x*1.5,y/1.1,0,0))
+                                               .times(this.turtle_head_global);
         
         let turtle3_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(this.turtle_larm_global);
         
         let turtle4_transform = model_transform.times(Mat4.translation(-1.6, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
-        
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(this.turtle_lleg_global);
+
         let turtle5_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(this.turtle_rarm_global);
         
         let turtle6_transform = model_transform.times(Mat4.translation(1.55, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(this.turtle_rleg_global);
 
-/*
-        let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
-                                               .times(Mat4.translation(x/2,y/4,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle_transform, this.materials.turtle);
-
-        let turtle2_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
-                                               .times(Mat4.scale(0.5,0.5,0.2,0))
-                                               .times(Mat4.translation(x*1.5,y/1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle2_transform, this.materials.turtlehead);
-
-        let turtle3_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
+        this.shapes.fishbody.draw(context, program_state, turtle_body, this.materials.turtle);
+        this.shapes.fishbody.draw(context, program_state, turtle_head, this.materials.turtlehead);
         this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
-
-        let turtle4_transform = model_transform.times(Mat4.translation(-1.5, -0.7, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
         this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
-
-        let turtle5_transform = model_transform.times(Mat4.translation(1.6, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
         this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
-        
-        let turtle6_transform = model_transform.times(Mat4.translation(1.5, -0.7, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x/1.1,y,0,0));
         this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
-*/
-        //Turtle End Draw
-        /*
-        let shark_transform = model_transform.times(Mat4.translation(-30, 15, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(3,1.5,1,1));
-        this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
-
-        let eye_transform = model_transform.times(Mat4.translation(-28, 15, 0.8, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(0.1,0.1,0.1,1));
-        this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
-
-        let tails_transform = model_transform.times(Mat4.translation(-33.03, 15, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(2,1.5,1,1))
-                                             .times(Mat4.rotation(-74.7,0,0,1));
-        this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
-
-        let tails2_transform = model_transform.times(Mat4.translation(-33.03, 15, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(2,1.5,1,1))
-                                             .times(Mat4.rotation(-27.4,0,0,1));
-        this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
-
-        let fin_transform = model_transform.times(Mat4.translation(-30.5, 16.5, 0, 0))
-                                             .times(Mat4.translation(t,0,0,0))
-                                             .times(Mat4.scale(2,1.5,1,1))
-                                             .times(Mat4.rotation(-145,0,0,1));
-        this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
-        */
-
         
-        let left_fish_count = 5;
-        let right_fish_count = 5;
-        let shark_left_count = 3;
-        let shark_right_count = 5;
-        
-        for(let i = 0; i < left_fish_count; i++){
-            this.draw_fishes_left(context, program_state, model_transform, i, t);
-        }
-        for(let i = 0; i < right_fish_count; i++){
-            this.draw_fishes_right(context, program_state, model_transform, i, t);
-        }
-        for(let i = 0; i < shark_left_count; i++){
-            this.draw_shark_left(context, program_state, model_transform, i, t);
-        }
-
-
     }
 
      getRandomInt(min, max) {
