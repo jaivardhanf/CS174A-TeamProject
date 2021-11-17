@@ -194,10 +194,14 @@ export class Assignment2 extends Base_Scene {
       
             this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies.override({color:fish_color}));
 
+            let max_angle = .1 * Math.PI;
+            let tail_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t*4))));
+
             let tail_trans = model_transform.times(Mat4.translation(x_cord-0.5, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_offsets_left[fish_count])*speed,0,0,0))
                                              .times(Mat4.scale(1,1,1,1))
                                              .times(Mat4.rotation(-73,0,0,1))
+                                             .times(Mat4.rotation(tail_rot,0,1,0));
             this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies.override({color:fish_color}));
         /* If fish off screen, we update it the time offset since we use time to translate in above bracket
            Also updated coordinates so it looks more random
@@ -223,10 +227,14 @@ export class Assignment2 extends Base_Scene {
       
             this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies.override({color:fish_color}));
 
+            let max_angle = .1 * Math.PI;
+            let tail_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t*4))));
+
             let tail_trans = model_transform.times(Mat4.translation(x_cord+0.5, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_offsets_right[fish_count])*speed,0,0,0))
                                              .times(Mat4.scale(1,1,1,1))
                                              .times(Mat4.rotation(74.61,0,0,1))
+                                             .times(Mat4.rotation(-tail_rot,0,1,0));
             this.shapes.tail.draw(context, program_state, tail_trans, this.materials.guppies.override({color:fish_color}));
         /* If fish off screen, we update it the time offset since we use time to translate in above bracket
            Also updated coordinates so it looks more random
@@ -534,6 +542,9 @@ export class Assignment2 extends Base_Scene {
         var y = this.y_movement;
         var x = this.x_movement;
 
+        const max_angle = .05 * Math.PI;
+        let flipper_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+
         //Draws turtle after drawing sharks and fishes
         var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
                                                .times(Mat4.translation(x/2,y/4,0,0))
@@ -544,24 +555,32 @@ export class Assignment2 extends Base_Scene {
                                                .times(Mat4.translation(x*1.5,y/1.1,0,0))
                                                .times(this.turtle_head_global);
         
-        let turtle_leg_tl_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
+        let turtle_leg_tl_transform = model_transform.times(Mat4.translation(0, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(-1.9, 0.5, 0.2, 0))
                                                .times(this.turtle_larm_global);
     
-        let turtle_leg_bl_transform = model_transform.times(Mat4.translation(-1.6, -0.7, 0, 0))
+        let turtle_leg_bl_transform = model_transform.times(Mat4.translation(0, -0.4, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(-1.9, -0.5, 0.2, 0))
                                                .times(this.turtle_lleg_global);
 
-        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
+        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(0, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(-flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(1.9, 0.5, 0.1, 0))
                                                .times(this.turtle_rarm_global);
         
-        let turtle_leg_br_transform = model_transform.times(Mat4.translation(1.55, -0.7, 0, 0))
+        let turtle_leg_br_transform = model_transform.times(Mat4.translation(0, -0.4, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(-flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(1.9, -0.5, 0.1, 0))
                                                .times(this.turtle_rleg_global);
 
         this.shapes.turtlebody.draw(context, program_state, turtle_body, this.materials.turtle);
