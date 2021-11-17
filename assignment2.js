@@ -86,7 +86,7 @@ class Base_Scene extends Scene {
         this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
         this.time_shark_offsets_right = Array(5).fill(0);
 
-        
+        //Used to keep track of scaling of turtle during collision detection        
         this.turtle_body_global = Mat4.identity();
         this.turtle_head_global = Mat4.identity();
         this.turtle_larm_global = Mat4.identity();
@@ -94,6 +94,7 @@ class Base_Scene extends Scene {
         this.turtle_lleg_global = Mat4.identity();
         this.turtle_rleg_global = Mat4.identity();
 
+        //Used to readjust sensitivity of collisoin detection when turtle grows/decreases
         this.collision_count = 0;
          
 
@@ -156,11 +157,10 @@ export class Assignment2 extends Base_Scene {
     }
 
     set_light_color() {
-        // TODO:  Create a class member variable to store your cube's colors.
-
         this.light_color = color(Math.random(), Math.random(), Math.random(), 1.0);
     }
 
+    /* When called, the following functions give new coordinates to a specefic */
     new_fish_cord_left(fish_count){
         this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-100 +30) -30);
         this.y_spawn_left[fish_count] = Math.floor(Math.random() * 20);
@@ -295,7 +295,7 @@ export class Assignment2 extends Base_Scene {
             let shark_transform = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(3,1.5,1,1));
-            this.shapes.fishbody.draw(context, program_state, shark_transform, this.materials.plastic);
+            this.shapes.sharkbody.draw(context, program_state, shark_transform, this.materials.shark);
 
             let eye_transform = model_transform.times(Mat4.translation(x_cord-2, y_cord, 0.8, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
@@ -306,19 +306,19 @@ export class Assignment2 extends Base_Scene {
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(20,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.plastic);
+            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.shark);
 
             let tails2_transform = model_transform.times(Mat4.translation(x_cord+3.03, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(60,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.plastic);
+            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.shark);
 
-            let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.5, 0, 0))
+            let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.3, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-145,0,0,1));
-            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.plastic);
+            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.shark);
 
         /* 
            If shark off screen, we update it the time offset since we use time to translate in above above bracket
@@ -332,6 +332,7 @@ export class Assignment2 extends Base_Scene {
 
     }
 
+    /* Called when collision is detected with fish, scales turtle bigger */
     collision_scale(){
         this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(1.1,1.1,1,0));
         this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(1.1,1.1,1.1,0))
@@ -349,9 +350,11 @@ export class Assignment2 extends Base_Scene {
         
         this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(1.1,1.1,1.1,0))
                                                          .times(Mat4.translation(0.15,-0.15,0));
+        //used for collision detection sensitivity
         this.collision_count = this.collision_count + 1;
     }
 
+    /* Called when collsion is detected with shark, scales turtle smaller */
     collision_unscale(){
         this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(0.9,0.9,0.9,0));
         this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(0.9,0.9,0.9,0))
@@ -369,15 +372,20 @@ export class Assignment2 extends Base_Scene {
         
         this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(0.9,0.9,0.9,0))
                                                          .times(Mat4.translation(-0.15,0.15,0));
+        
+        //used for collision detection sensitivity
         this.collision_count = this.collision_count - 1;
     }
 
 
+    
     detect_fish_collision_left(fish_count, t, speed){
+        /* Gets current fishes coordinates with respect to time */
         let fish_x_cord = this.x_spawn_left[fish_count] + ((t-this.time_offsets_left[fish_count])*speed);
         let fish_y_cord = this.y_spawn_left[fish_count];
         let turtle_x = this.x_movement;
         let turtle_y = this.y_movement;
+        /*Gets turtle and fishes coordinates on the same scale */
         //turtle_x bounds:[-36, 23] turtle_y bounds: [-6.5, 49] 
         //fish_x_cord bounds [-27,17] fish_y_cord bounds [-3.5 ,22]
         //fish_x_cord converted to turtle_x coords using equation: Turtle-X_cord = fish_x_cord(59/44) - 9/44
@@ -391,10 +399,12 @@ export class Assignment2 extends Base_Scene {
     }
 
     detect_fish_collision_right(fish_count, t, speed){
+        /* Gets current fishes coordinates with respect to time */
         let fish_x_cord = this.x_spawn_right[fish_count] - ((t-this.time_offsets_right[fish_count])*speed);
         let fish_y_cord = this.y_spawn_right[fish_count];
         let turtle_x = this.x_movement;
         let turtle_y = this.y_movement;
+        /*Gets turtle and fishes coordinates on the same scale */
         let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
         let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
         if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
@@ -404,10 +414,13 @@ export class Assignment2 extends Base_Scene {
     }
 
     detect_shark_collision_left(shark_count, t, speed){
+        /* Gets current shark coordinates with respect to time */
         let shark_x_cord = this.x_shark_spawn_left[shark_count] + ((t-this.time_shark_offsets_left[shark_count])*speed);
         let shark_y_cord = this.y_shark_spawn_left[shark_count];
         let turtle_x = this.x_movement;
         let turtle_y = this.y_movement;
+        
+        /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
         if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
@@ -419,10 +432,12 @@ export class Assignment2 extends Base_Scene {
     }
 
     detect_shark_collision_right(shark_count, t, speed){
+        /* Gets current shark coordinates with respect to time */
         let shark_x_cord = this.x_shark_spawn_right[shark_count] - ((t-this.time_shark_offsets_right[shark_count])*speed);
         let shark_y_cord = this.y_shark_spawn_right[shark_count];
         let turtle_x = this.x_movement;
         let turtle_y = this.y_movement;
+        /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
         if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
@@ -479,13 +494,16 @@ export class Assignment2 extends Base_Scene {
         // Draw Background
         this.shapes.waterbox.draw(context, program_state, background_transform, this.materials.b);
         // this.shapes.box.draw(context, program_state, model_transform, this.materials.plastic);
-        let left_fish_count = 1;
-        let right_fish_count = 1;
-        let shark_left_count = 1;
-        let shark_right_count = 5;
+        
+
+        let left_fish_count = 5;
+        let right_fish_count = 5;
+        let shark_left_count = 2;
+        let shark_right_count = 2;
         let fish_speed = 3;
         let shark_speed = 3;
         
+        /*These for loops draw fishes and sharks and call collsion detection functions*/
         for(let i = 0; i < left_fish_count; i++){
             this.draw_fishes_left(context, program_state, model_transform, i, t, fish_speed);
             this.detect_fish_collision_left(i, t, fish_speed);
@@ -516,7 +534,7 @@ export class Assignment2 extends Base_Scene {
         var y = this.y_movement;
         var x = this.x_movement;
 
-        //Turtle Draw Body
+        //Draws turtle after drawing sharks and fishes
         var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
                                                .times(Mat4.translation(x/2,y/4,0,0))
                                                .times(this.turtle_body_global);
@@ -526,53 +544,32 @@ export class Assignment2 extends Base_Scene {
                                                .times(Mat4.translation(x*1.5,y/1.1,0,0))
                                                .times(this.turtle_head_global);
         
-        /*                                       // Draw Turtle 
-        let turtle_transform = model_transform.times(Mat4.scale(1.5,1.8,1,0))
-                                               .times(Mat4.translation(x/2,y/4,0,0));
-        this.shapes.turtlebody.draw(context, program_state, turtle_transform, this.materials.turtle);
-
-        let turtle_head_transform = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
-                                               .times(Mat4.scale(0.5,0.5,0.4,0))
-                                               .times(Mat4.translation(x*1.5,y/1.1,0,0));
-        this.shapes.turtlebody.draw(context, program_state, turtle_head_transform, this.materials.turtlelimbs);
-*/
-        
         let turtle_leg_tl_transform = model_transform.times(Mat4.translation(-1.6, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
                                                .times(this.turtle_larm_global);
-                                               /*
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, this.materials.turtlelimbs);*/
-        
+    
         let turtle_leg_bl_transform = model_transform.times(Mat4.translation(-1.6, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
                                                .times(this.turtle_lleg_global);
-/*
-        let turtle5_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
+
+        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
                                                .times(this.turtle_rarm_global);
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
-        */
-        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(1.55, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0));
-        //this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
         
         let turtle_leg_br_transform = model_transform.times(Mat4.translation(1.55, -0.7, 0, 0))
                                                .times(Mat4.scale(0.8,0.4,0.2,0))
                                                .times(Mat4.translation(x*0.94,y*1.1,0,0))
                                                .times(this.turtle_rleg_global);
 
-        this.shapes.fishbody.draw(context, program_state, turtle_body, this.materials.turtle);
-        this.shapes.fishbody.draw(context, program_state, turtle_head, this.materials.turtlehead);
-        this.shapes.fishbody.draw(context, program_state, turtle3_transform, this.materials.turtlehead);
-        this.shapes.fishbody.draw(context, program_state, turtle4_transform, this.materials.turtlehead);
-        this.shapes.fishbody.draw(context, program_state, turtle5_transform, this.materials.turtlehead);
-        this.shapes.fishbody.draw(context, program_state, turtle6_transform, this.materials.turtlehead);
+        this.shapes.turtlebody.draw(context, program_state, turtle_body, this.materials.turtle);
+        this.shapes.fishbody.draw(context, program_state, turtle_head, this.materials.turtlelimbs);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, this.materials.turtlelimbs);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
+        this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, this.materials.turtlelimbs);
         
     }
 
