@@ -1,4 +1,5 @@
 import {defs, tiny} from './examples/common.js';
+import { Shape_From_File } from './examples/obj-file-demo.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Shader, Texture, Material, Scene,
@@ -26,6 +27,10 @@ class Base_Scene extends Scene {
         this.colorArray = [];
         this.set_fish_colors();
 
+        // Sounds
+        this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
+        this.munch_sound = new Audio("assets/munch.mp3"); 
+
         const bump = new defs.Fake_Bump_Map(1);
         const textured = new defs.Textured_Phong(1);
 
@@ -36,11 +41,19 @@ class Base_Scene extends Scene {
             turtlebody: new defs.Subdivision_Sphere(2),
             sharkbody: new defs.Subdivision_Sphere(2),
             egg: new defs.Subdivision_Sphere(4),
-            box_2: new defs.Cube(),
+            rock: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
             axis: new defs.Axis_Arrows(),
             waterbox: new defs.Subdivision_Sphere(4),
             tail: new defs.Triangle(),
             sand: new defs.Capped_Cylinder(50, 50, [[0, 2], [0, 1]]),
+            coral1: new Shape_From_File("assets/coral1.obj"),
+            coral2: new Shape_From_File("assets/coral2.obj"),
+            coral3: new Shape_From_File("assets/coral3.obj"),
+            coral4: new Shape_From_File("assets/coral4.obj"),
+            coral5: new Shape_From_File("assets/coral5.obj"),
+            coral6: new Shape_From_File("assets/coral6.obj"),
+            shell1: new Shape_From_File("assets/shell2.obj"),
+            snail: new Shape_From_File("assets/snail.obj"),
 
         };
         
@@ -60,9 +73,18 @@ class Base_Scene extends Scene {
                 {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
             sand: new Material(textured,
                 {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40")}),
-            a: new Material(bump, {ambient: .5, texture: new Texture("assets/background2.jpg")}),
+            sand2: new Material(textured, 
+                {ambient: 0.8, diffusivity: .9, texture: new Texture("assets/sand3.png")}),
             b: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
-            c: new Material(bump, {ambient: 1, texture: this.texture})
+            coral1: new Material(new defs.Phong_Shader(), 
+                {ambient: 0.3, diffusivity: .9, specularity: 1, color: hex_color("#f28dae")}),
+            rock: new Material(new Gouraud_Shader(),
+                {ambient: 0.6, diffusivity: .9, color: hex_color("#9c9c9c")}),
+            shell1: new Material(new Gouraud_Shader(),
+                {ambient: 0.3, diffusivity: .9, specularity: 1, color: hex_color("#ffc0ad")}),
+            snail: new Material(new Gouraud_Shader(),
+                {ambient: 0.3, diffusivity: .6, specularity: 0, color: hex_color("#97ccb1")}),
+
         };
 
         /* Turtle coordinates */
@@ -145,6 +167,27 @@ export class Assignment2 extends Base_Scene {
 
         this.key_triggered_button("Change Lighting Color", ['c'], () => {
             this.change_lighting_color = true; 
+        });
+
+        this.key_triggered_button("Start Music/Game", ['0'], () => {
+            // loop background audio
+            if (typeof this.background_sound.loop == 'boolean')
+            {
+                this.background_sound.loop = true;
+            }
+            else
+            {
+                this.background_sound.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                }, false);
+            }
+            this.background_sound.play(); 
+        });
+
+        this.key_triggered_button("Stop Music/Pause Game", ['p'], () => {
+            // loop background audio
+            this.background_sound.pause(); 
         });
     
     }
@@ -401,6 +444,7 @@ export class Assignment2 extends Base_Scene {
         let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
         let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
         if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
+            this.munch_sound.play();
             this.new_fish_cord_left(fish_count);
             this.collision_scale();         
         }
@@ -416,6 +460,7 @@ export class Assignment2 extends Base_Scene {
         let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
         let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
         if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
+            this.munch_sound.play();
             this.new_fish_cord_right(fish_count);
             this.collision_scale();
         }
@@ -495,9 +540,9 @@ export class Assignment2 extends Base_Scene {
         let background_transform = model_transform;
         background_transform = background_transform.times(Mat4.rotation(0, 0, 1, 0))
                                                    .times(Mat4.translation(0, 0, 0, 0))
-                                                   .times(Mat4.rotation(Math.PI/1.5 , 1, 0, 0))
+                                                   .times(Mat4.rotation(Math.PI/1.8 , 1, 0, 0))
                                                    .times(Mat4.scale(60, 60, 60))
-                                                   .times(Mat4.rotation(t/50, 0, 1, 0));
+                                                   .times(Mat4.rotation(t/40, 0, 1, 0));
 
         // Draw Background
         this.shapes.waterbox.draw(context, program_state, background_transform, this.materials.b);
@@ -542,8 +587,8 @@ export class Assignment2 extends Base_Scene {
         var y = this.y_movement;
         var x = this.x_movement;
 
-        const max_angle = .05 * Math.PI;
-        let flipper_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+        let max_flipper_angle = .05 * Math.PI;
+        let flipper_rot = ((max_flipper_angle/2) + (max_flipper_angle/2) * (Math.sin(Math.PI*(t*1.2))));
 
         //Draws turtle after drawing sharks and fishes
         var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
@@ -589,6 +634,65 @@ export class Assignment2 extends Base_Scene {
         this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
         this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
         this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, this.materials.turtlelimbs);
+
+        const max_coral_angle = .01 * Math.PI;
+        let coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+
+
+        
+        let pink_coral_transform = model_transform.times(Mat4.translation(-22,0,-17,0))
+                                              .times(Mat4.scale(4,4,4,0))
+                                              .times(Mat4.rotation(-coral_sway, 0,0,1))
+        this.shapes.coral1.draw(context, program_state, pink_coral_transform, this.materials.coral1);
+
+        let lightgreen_coral_transform = model_transform.times(Mat4.translation(-18,0,-17,0))
+                                              .times(Mat4.scale(4,4,3,0))
+                                              .times(Mat4.rotation(coral_sway, 0,0,1));    
+        this.shapes.coral2.draw(context, program_state, lightgreen_coral_transform, this.materials.coral1.override({color:hex_color("#8df2aa")}));
+
+        let purple_coral_transform = model_transform.times(Mat4.translation(-27,0,-17,0))
+                                              .times(Mat4.scale(4,6,4,0))
+                                              .times(Mat4.rotation(360,0,0,1))
+                                              .times(Mat4.rotation(coral_sway, 0,0,1));
+        this.shapes.coral2.draw(context, program_state, purple_coral_transform, this.materials.coral1.override({color:hex_color("#947fb8")}));
+
+        let orange_coral_transform = model_transform.times(Mat4.translation(15,0,-16,0))
+                                              .times(Mat4.scale(2,3,3,0))
+                                              .times(Mat4.rotation(-33,1,0,0))
+                                              .times(Mat4.rotation(coral_sway, 0,0,1));
+        this.shapes.coral6.draw(context, program_state, orange_coral_transform, this.materials.coral1.override({color:hex_color("#ffaf6e")}));
+
+        let periwinkle_coral_transform = model_transform.times(Mat4.translation(16,0,-22,0))
+                                              .times(Mat4.scale(5,6,3,0))
+                                              .times(Mat4.rotation(-coral_sway, 0,0,1));
+        this.shapes.coral1.draw(context, program_state, periwinkle_coral_transform, this.materials.coral1.override({color:hex_color("#6d85c2")}));
+
+        let green_coral_transform = model_transform.times(Mat4.translation(22,6,-16,0))
+                                              .times(Mat4.scale(3,4,3,0))
+                                              .times(Mat4.rotation(-33,1,0,0))
+                                              .times(Mat4.rotation(-coral_sway, 1,0,0));
+        this.shapes.coral4.draw(context, program_state, green_coral_transform, this.materials.coral1.override({color:hex_color("#a2e677")}));
+
+        let rock1_transform = model_transform.times(Mat4.translation(-34,0,-17,0))
+                                             .times(Mat4.scale(4,5,4,0));
+        this.shapes.rock.draw(context, program_state, rock1_transform, this.materials.rock);
+
+        let shell1_transform = model_transform.times(Mat4.translation(11,0,-14,0));
+        this.shapes.shell1.draw(context, program_state, shell1_transform, this.materials.shell1);
+
+        let snail_transform = model_transform.times(Mat4.translation(-28,-1,-1,0))    
+                                             .times(Mat4.rotation(-33,1,0,0))
+                                             .times(Mat4.rotation(33,0,0,1))
+                                             .times(Mat4.translation(0,-t/8,0,0))
+        this.shapes.snail.draw(context, program_state, snail_transform, this.materials.snail);
+
+
+//         let coral1_transform = model_transform.times(Mat4.translation(-22,3.5,0,0));
+//         this.shapes.coral1.draw(context, program_state, coral1_transform, this.materials.coral1);
+
+//         let coral1_transform = model_transform.times(Mat4.translation(-22,3.5,0,0));
+//         this.shapes.coral1.draw(context, program_state, coral1_transform, this.materials.coral1);
+       
         
     }
 
