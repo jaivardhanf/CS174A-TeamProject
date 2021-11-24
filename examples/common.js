@@ -988,16 +988,16 @@ const Movement_Controls = defs.Movement_Controls =
                 this.will_take_over_graphics_state = false;
             }
 
-            if (!this.mouse_enabled_canvases.has(context.canvas)) {
-                this.add_mouse_controls(context.canvas);
-                this.mouse_enabled_canvases.add(context.canvas)
-            }
-            // Move in first-person.  Scale the normal camera aiming speed by dt for smoothness:
-            this.first_person_flyaround(dt * r, dt * m);
-            // Also apply third-person "arcball" camera mode if a mouse drag is occurring:
-            if (this.mouse.anchor)
-                this.third_person_arcball(dt * r);
-            // Log some values:
+//             if (!this.mouse_enabled_canvases.has(context.canvas)) {
+//                 this.add_mouse_controls(context.canvas);
+//                 this.mouse_enabled_canvases.add(context.canvas)
+//             }
+//             // Move in first-person.  Scale the normal camera aiming speed by dt for smoothness:
+//             this.first_person_flyaround(dt * r, dt * m);
+//             // Also apply third-person "arcball" camera mode if a mouse drag is occurring:
+//             if (this.mouse.anchor)
+//                 this.third_person_arcball(dt * r);
+//             // Log some values:
             this.pos = this.inverse().times(vec4(0, 0, 0, 1));
             this.z_axis = this.inverse().times(vec4(0, 0, 1, 0));
         }
