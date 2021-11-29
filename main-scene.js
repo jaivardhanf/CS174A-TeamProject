@@ -3,6 +3,8 @@ import {defs, tiny} from './examples/common.js';
 import {Transforms_Sandbox} from "./examples/transforms-sandbox.js"
 import {Assignment2} from "./assignment2.js"
 import {Scene_To_Texture_Demo} from "./examples/scene-to-texture-demo.js"
+import {Mouse_Demo} from "./examples/mouse-demo.js"
+
 
 // Pull these names into this module's scope for convenience:
 const {
@@ -21,7 +23,7 @@ const {
 const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo;
 
 Object.assign(defs,
-            {Transforms_Sandbox}, {Assignment2}, {Scene_To_Texture_Demo});
+            {Transforms_Sandbox}, {Assignment2}, {Scene_To_Texture_Demo}, {Mouse_Demo});
 
 // ******************** End extra step
 
