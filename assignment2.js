@@ -16,7 +16,9 @@ class Base_Scene extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-        
+        // start toggle
+        //this.starts = false; 
+
         // Sounds
         this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
         this.munch_sound = new Audio("assets/munch.mp3"); 
@@ -87,18 +89,25 @@ class Base_Scene extends Scene {
                 {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40"), smoothness: 64,
                 color_texture: new Texture("assets/sand3.png"),
                 light_depth_texture: null}),
-            shark: new Material(new Gouraud_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),
+            /*shark: new Material(new Gouraud_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),*/
+            shark: new Material(textured,
+                {ambient: .4, diffusivity: .6, texture: new Texture("assets/shark skin.jpg")}),                
             eye: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#000000")}),
             turtle: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#548a62")}),
             turtlelimbs: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#33573c")}),
-            guppies: new Material(new defs.Phong_Shader(),
+            /*guppies: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F"), smoothness: 64,
                 color_texture: null,
-                light_depth_texture: null}),
+                light_depth_texture: null}),*/
+            guppies: new Material(textured,
+                {ambient: .4, diffusivity: .6, texture: new Texture("assets/silver_fish(2).png"), 
+                smoothness: 64,
+                color_texture: null,
+                light_depth_texture: null}),                
             tails: new Material(new Tail_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
             coral: new Material(new Shadow_Textured_Phong_Shader(1), 
@@ -123,6 +132,10 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
             dash_board: new Material(textured,
                 {ambient: 0.2, diffusivity: .9, color: hex_color("#000000")}),
+            enter: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/start button.png")}),
+            instructions: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions.png")}),
         };
 
         /* Turtle coordinates */
@@ -368,7 +381,7 @@ export class Assignment2 extends Base_Scene {
         let shark_speed = 3 + (3 - this.lifes)*4;
 
         /*These for loops draw fishes and sharks and call collsion detection functions*/
-        if(this.lifes != 0){
+        /*if(this.lifes != 0){
             for(let i = 0; i < left_fish_count; i++){
                 this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
                 this.detect_fish_collision_left(i, t/1000, fish_speed);
@@ -385,7 +398,32 @@ export class Assignment2 extends Base_Scene {
                 this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
                 this.detect_shark_collision_right(i, t/1000, shark_speed);
 
+            }*/
+
+         
+            if(this.lifes != 0){
+                if(this.starts){
+                    {
+                    for(let i = 0; i < left_fish_count; i++){
+                    this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                    this.detect_fish_collision_left(i, t/1000, fish_speed);
+                    }
+                    for(let i = 0; i < right_fish_count; i++){
+                    this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                    this.detect_fish_collision_right(i, t/1000, fish_speed);
+                    }
+                    for(let i = 0; i < shark_left_count; i++){
+                    this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                    this.detect_shark_collision_left(i, t/1000, shark_speed);
+                    }
+                    for(let i = 0; i < shark_right_count; i++){
+                    this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                    this.detect_shark_collision_right(i, t/1000, shark_speed);
+                    }   
+                }
+               
             }
+
         }
 
         // X,Y for turtle position --> controlled by player using arrow keys 
@@ -433,12 +471,24 @@ export class Assignment2 extends Base_Scene {
                                                .times(this.turtle_rleg_global);
 
         if(this.lifes != 0){
-            this.shapes.turtlebody.draw(context, program_state, turtle_body, shadow_pass? this.materials.turtle : this.pure);
-            this.shapes.fishbody.draw(context, program_state, turtle_head, shadow_pass? this.materials.turtlelimbs : this.pure);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+         
+            if(this.starts)  
+            {
+                this.shapes.turtlebody.draw(context, program_state, turtle_body, shadow_pass? this.materials.turtle : this.pure);
+                this.shapes.fishbody.draw(context, program_state, turtle_head, shadow_pass? this.materials.turtlelimbs : this.pure);
+                this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+                this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+                this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+                this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, shadow_pass? this.materials.turtlelimbs : this.pure);                
+            }    
+          else
+            {   
+                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(16,10,-10,0)).times(Mat4.scale(5, 5, 5)),this.materials.enter);
+                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(5.5, 5.5, 5.5)),this.materials.instructions);                
+            }
+
+                      /// start buttons ////
+        //this.shapes.box.draw(context, program_state, model_transform.times(Mat4.scale(10, 10, 10)),this.materials.enter);
         }
         const max_coral_angle = .01 * Math.PI;
         var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
@@ -508,6 +558,9 @@ export class Assignment2 extends Base_Scene {
 
 
     make_control_panel() {
+
+        // Start Game (enter key)
+        this.key_triggered_button("Start", ['Enter'], () => {this.starts =! this.starts;});
 
         // Up Movement (arrow key up)
         this.key_triggered_button("Up", ['ArrowUp'], () => {
@@ -1187,7 +1240,7 @@ export class Assignment2 extends Base_Scene {
         // draw lifes count
         let lifes_model = Mat4.identity().times(Mat4.translation(-23.5,16.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
         let lifes_string = this.lifes;
-        this.shapes.text.set_string("lifes:" + lifes_string.toString(), context.context);
+        this.shapes.text.set_string("lives:" + lifes_string.toString(), context.context);
         this.shapes.text.draw(context, program_state, lifes_model.times(Mat4.scale(.50, .50, .50)), this.materials.text_image);
         
     }
@@ -1197,6 +1250,7 @@ export class Assignment2 extends Base_Scene {
         const gl = context.context;
         let model_transform = Mat4.identity();
 
+       
         if (!this.init_ok) {
             const ext = gl.getExtension('WEBGL_depth_texture');
             if (!ext) {
@@ -1206,6 +1260,10 @@ export class Assignment2 extends Base_Scene {
 
             this.init_ok = true;
         }
+
+         /// start buttons ////
+        //this.shapes.box.draw(context, program_state, model_transform.times(Mat4.scale(10, 10, 10)),this.materials.enter);
+
 
         // set lights
         this.light_position = vec4(-5, 20, 5, 1);
