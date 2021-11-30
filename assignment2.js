@@ -1,6 +1,8 @@
 import {defs, tiny} from './examples/common.js';
 import { Shape_From_File } from './examples/obj-file-demo.js';
 import { Text_Line } from './examples/text-demo.js';
+import {Color_Phong_Shader, Shadow_Textured_Phong_Shader,
+    Depth_Texture_Shader_2D, Buffered_Texture, LIGHT_DEPTH_TEX_SIZE} from './examples/shadow-demo-shaders.js'
 
 
 const {
@@ -14,14 +16,12 @@ class Base_Scene extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-        this.hover = this.swarm = false;
-        this.scratchpad = document.createElement('canvas');
-        // A hidden canvas for re-sizing the real canvas to be square:
-        this.scratchpad_context = this.scratchpad.getContext('2d');
-        this.scratchpad.width = 256;
-        this.scratchpad.height = 256;                // Initial image source: Blank gif file:
-        this.texture = new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+
+        // Sounds
+        this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
+        this.munch_sound = new Audio("assets/munch.mp3"); 
         
+        // Lighting 
         this.change_lighting_color = false;
         this.light_color = color(1,1,1,1);
 
@@ -29,20 +29,13 @@ class Base_Scene extends Scene {
         this.fish_color_array = [];
         this.set_fish_colors();
 
-        // Save mouse x,y position when player clicks
+        // Mouse Position
         this.mousex;
         this.mousey;
        
-        // Draw Object Flags + Queue 
+        // Draw queue for purchased items 
         this.userdraw = "none"; 
         this.coral_queue = [];
-
-        // Sounds
-        this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
-        this.munch_sound = new Audio("assets/munch.mp3"); 
-
-        const bump = new defs.Fake_Bump_Map(1);
-        const textured = new defs.Textured_Phong(1);
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
@@ -52,9 +45,8 @@ class Base_Scene extends Scene {
             fishbody: new defs.Subdivision_Sphere(4),
             turtlebody: new defs.Subdivision_Sphere(2),
             sharkbody: new defs.Subdivision_Sphere(2),
-            egg: new defs.Subdivision_Sphere(4),
             rock: new (defs.Subdivision_Sphere.prototype.make_flat_shaded_version())(2),
-            waterbox: new defs.Subdivision_Sphere(4),
+            aquarium: new defs.Subdivision_Sphere(4),
             tail: new defs.Triangle(),
             sand: new defs.Capped_Cylinder(50, 50, [[0, 2], [0, 1]]),
             coral1: new Shape_From_File("assets/coral1.obj"),
@@ -72,23 +64,29 @@ class Base_Scene extends Scene {
             nessy: new Shape_From_File("assets/nessy.obj"),
             poseidon: new Shape_From_File("assets/poseidon.obj"),
             temple: new Shape_From_File("assets/temple.obj"),
-            hemi: new Shape_From_File("assets/hemi.obj"),
             squid: new Shape_From_File("assets/squid.obj"),
             text: new Text_Line(35),
-
-
         };
+
+        // Floor --> prepared for shadows
+        this.floor = new Material(new Shadow_Textured_Phong_Shader(1), 
+                {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40"), smoothness: 64,
+                color_texture: new Texture("assets/sand3.png"),
+                light_depth_texture: null})
         
+        const textured = new defs.Textured_Phong(1);
+
         // Materials
         this.materials = {
             menu: new Material(textured,
                 {ambient: 0.9, diffusivity: .9, texture: new Texture("assets/wood2.jpg")}),
             menubuttons: new Material(textured,
                 {ambient: 0.9, diffusivity: 1, specularity: 1,  texture: new Texture("assets/bubble3.png")}),
-            dollarsign: new Material(textured,
-                {ambient: 1, diffusivity: 1, specularity: 1,  color: hex_color("#000000"), texture: new Texture("assets/dollarsign.png")}),
-            eight: new Material(textured,
-                {ambient: 1, diffusivity: 1, specularity: 1,  color: hex_color("#000000"), texture: new Texture("assets/eight.png")}),
+            water: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
+            sand: new Material(new Shadow_Textured_Phong_Shader(1), 
+                {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40"), smoothness: 64,
+                color_texture: new Texture("assets/sand3.png"),
+                light_depth_texture: null}),
             shark: new Material(new Gouraud_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),
             eye: new Material(new defs.Phong_Shader(),
@@ -97,32 +95,26 @@ class Base_Scene extends Scene {
                 {ambient: .4, diffusivity: .6, color: hex_color("#548a62")}),
             turtlelimbs: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#33573c")}),
-            egg: new Material(new defs.Phong_Shader(),
-                {ambient: .6, diffusivity: .6, specularity: 1, color: hex_color("#FFFFFF")}),
             guppies: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
+                {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F"), smoothness: 64,
+                color_texture: null,
+                light_depth_texture: null}),
             tails: new Material(new Tail_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F")}),
-            sand: new Material(textured,
-                {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40")}),
-            sand2: new Material(textured, 
-                {ambient: 0.8, diffusivity: .9, texture: new Texture("assets/sand3.png")}),
-            b: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
-            coral1: new Material(new defs.Phong_Shader(), 
-                {ambient: 0.3, diffusivity: .9, specularity: 1, color: hex_color("#f28dae")}),
-            coral2: new Material(new defs.Phong_Shader(), 
+            coral: new Material(new Shadow_Textured_Phong_Shader(1), 
                 {ambient: 0.3, diffusivity: .9, specularity: 1, color: hex_color("#f28dae")}),
             jellyfish: new Material(new Jellyfish_Shader(), 
                 {ambient: 0.3, diffusivity: .9, specularity: 1, color: hex_color("#f28dae")}),
-            rock: new Material(new Gouraud_Shader(),
-                {ambient: 0.6, diffusivity: .9, color: hex_color("#9c9c9c")}),
-            shell1: new Material(new Gouraud_Shader(),
+            rock: new Material(new Shadow_Textured_Phong_Shader(1),
+                {ambient: 0.6, diffusivity: .9, color: hex_color("#9c9c9c"), smoothness: 64,
+                color_texture: null,
+                light_depth_texture: null}),
+            shell: new Material(new Gouraud_Shader(),
                 {ambient: 0.3, diffusivity: .9, specularity: 1, color: hex_color("#ffc0ad")}),
             shelltexture: new Material(textured,
                 {ambient: 1, color: hex_color("#000000"), texture: new Texture("assets/seashelltexture.jpg")}),
             snail: new Material(new Gouraud_Shader(),
                 {ambient: 0.3, diffusivity: .6, specularity: 0, color: hex_color("#97ccb1")}),
-         // To show text you need a Material like this one:
             gold: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/gold.jpg")}),
             redwood: new Material(textured,
@@ -131,7 +123,6 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
             dash_board: new Material(textured,
                 {ambient: 0.2, diffusivity: .9, color: hex_color("#000000")}),
-
         };
 
         /* Turtle coordinates */
@@ -155,7 +146,7 @@ class Base_Scene extends Scene {
         this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
         this.time_shark_offsets_right = Array(5).fill(0);
 
-        //Used to keep track of scaling of turtle during collision detection        
+        // Used to keep track of scaling of turtle during collision detection        
         this.turtle_body_global = Mat4.identity();
         this.turtle_head_global = Mat4.identity();
         this.turtle_larm_global = Mat4.identity();
@@ -163,7 +154,7 @@ class Base_Scene extends Scene {
         this.turtle_lleg_global = Mat4.identity();
         this.turtle_rleg_global = Mat4.identity();
 
-        //Used to readjust sensitivity of collisoin detection when turtle grows/decreases
+        // Used to readjust sensitivity of collisoin detection when turtle grows/decreases
         this.collision_count = 0;
         this.sand_dollars = 0;
         this.total_spent = 0;
@@ -172,11 +163,342 @@ class Base_Scene extends Scene {
         this.offset = 0;
         this.left_shark_count = 3;
         this.right_shark_count = 3;
+
+        // for the first pass
+        this.pure = new Material(new Color_Phong_Shader(), {
+        })
+        // for light source
+        this.light_src = new Material(new defs.Phong_Shader(), {
+            color: color(1, 1, 1, 1), ambient: 1, diffusivity: 0, specularity: 0
+        });
+        // for depth texture display
+        this.depth_tex =  new Material(new Depth_Texture_Shader_2D(), {
+            color: color(0, 0, .0, 1),
+            ambient: 1, diffusivity: 0, specularity: 0, texture: null
+        });
+
+        // to ensure texture initialization only does once
+        this.init_ok = false;
 ;
     }
 }
 
 export class Assignment2 extends Base_Scene {  
+
+   texture_buffer_init(gl) {
+        // Depth Texture
+        this.lightDepthTexture = gl.createTexture();
+        // Bind it to TinyGraphics
+        this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
+        this.floor.light_depth_texture = this.light_depth_texture;
+
+        this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
+        gl.bindTexture(gl.TEXTURE_2D, this.lightDepthTexture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,      // target
+            0,                  // mip level
+            gl.DEPTH_COMPONENT, // internal format
+            this.lightDepthTextureSize,   // width
+            this.lightDepthTextureSize,   // height
+            0,                  // border
+            gl.DEPTH_COMPONENT, // format
+            gl.UNSIGNED_INT,    // type
+            null);              // data
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        // Depth Texture Buffer
+        this.lightDepthFramebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,       // target
+            gl.DEPTH_ATTACHMENT,  // attachment point
+            gl.TEXTURE_2D,        // texture target
+            this.lightDepthTexture,         // texture
+            0);                   // mip level
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        // create a color texture of the same size as the depth texture
+        // see article why this is needed_
+        this.unusedTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.unusedTexture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            this.lightDepthTextureSize,
+            this.lightDepthTextureSize,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            null,
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // attach it to the framebuffer
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,        // target
+            gl.COLOR_ATTACHMENT0,  // attachment point
+            gl.TEXTURE_2D,         // texture target
+            this.unusedTexture,         // texture
+            0);                    // mip level
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    render_scene(context, program_state, shadow_pass, draw_light_source=false, draw_shadow=false) {
+        // shadow_pass: true if this is the second pass that draw the shadow.
+        // draw_light_source: true if we want to draw the light source.
+        // draw_shadow: true if we want to draw the shadow
+
+        let light_position = this.light_position;
+        let light_color = this.light_color;
+        const t = program_state.animation_time, dt = program_state.animation_delta_time / 1000;
+
+        program_state.draw_shadow = draw_shadow;
+
+        let model_transform = Mat4.identity();
+        // Draw aquarium background (water)
+        let background_transform = model_transform;
+        background_transform = background_transform.times(Mat4.rotation(0, 0, 1, 0))
+                                                   .times(Mat4.translation(0, 0, 0, 0))
+                                                   .times(Mat4.rotation(Math.PI/1.8 , 1, 0, 0))
+                                                   .times(Mat4.scale(60, 60, 60))
+                                                   .times(Mat4.rotation(t/40000, 0, 1, 0));
+
+        this.shapes.aquarium.draw(context, program_state, background_transform, this.materials.water);
+
+        // Draw aquarium floor (sand)
+        let sand_transform = model_transform.times(Mat4.rotation(0, 0, 1, 0))
+                                            .times(Mat4.translation(0,0,0,0))
+                                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+                                            .times(Mat4.translation(0, 0, 2))
+                                            .times(Mat4.scale(50, 25, 0.5));
+
+        this.shapes.sand.draw(context, program_state, sand_transform, this.floor);
+
+        // Draw menu bar if lifes are not 0
+        if(this.lifes != 0){
+            this.draw_menu_bar(context, program_state, model_transform, t/1000);
+        }
+        
+        // If player has purchased decorations --> draw them here
+        if (this.coral_queue.length > 0) {
+            for (let i = 0; i < this.coral_queue.length; i++) {
+                let dt = t/1000;
+                let obj = this.coral_queue[i];
+                let position = obj.pos;
+                let size = obj.size;
+                let color = obj.color;
+                let negorpos = obj.negorpos; 
+                let transform = Mat4.translation(position[0], position[1], position[2])
+                                    .times(Mat4.scale(size, size, size, 0));
+ 
+                // If coral --> add sway effect 
+                var coral_angle = .01 * Math.PI;
+                var coral_sway = ((coral_angle/2) + (coral_angle/2) * (Math.sin(Math.PI*(dt*1.2))));
+
+                if (obj.object == "coral1") {
+                    transform = transform.times(Mat4.rotation(coral_sway, 0,0,1))
+                    // straighten up coral (it tilts due to perspective projection)
+                    if (position[0] < 0){
+                        transform = transform.times(Mat4.rotation(-0.1, 0,0,1))
+                    }
+                    if (position[0] > 0){
+                        transform = transform.times(Mat4.rotation(0.1, 0,0,1))
+                    }
+                    this.shapes.coral1.draw(context, program_state, transform,shadow_pass? this.materials.coral.override({color:color}) : this.pure);
+                }
+                if (obj.object == "coral2") {
+                    transform = transform.times(Mat4.rotation(coral_sway, 0,0,1))
+                                         .times(Mat4.scale(0.7, 0.7,0.7,1))
+                    this.shapes.coral2.draw(context, program_state, transform,shadow_pass? this.materials.coral.override({color:color}) : this.pure);
+                }
+                if (obj.object == "rock") {
+                    this.shapes.rock.draw(context, program_state, transform,shadow_pass? this.materials.rock : this.pure);
+                }
+                if (obj.object == "squid") {                
+                    let squid_movement = negorpos * (Math.sin(Math.PI * dt/4));    
+                    transform = transform.times(Mat4.scale(2,1.5,2,0))
+                                         .times(Mat4.translation(0,squid_movement,0))
+                                         .times(Mat4.rotation(squid_movement,0,1,0))
+                    this.shapes.squid.draw(context, program_state, transform,shadow_pass? this.materials.gold : this.pure);
+                }
+                if (obj.object == "starfish") {
+                    transform = transform.times(Mat4.rotation(-45,1,0,0))
+                                         .times(Mat4.scale(0.4,0.4,0.4,0))
+                    this.shapes.starfish.draw(context, program_state, transform, shadow_pass? this.materials.coral.override({color:color}) : this.pure);
+                }
+
+                if (obj.object == "shell") {
+                    transform = transform.times(Mat4.scale(0.325,0.325,0.325,0))
+                    this.shapes.shell1.draw(context, program_state, transform, shadow_pass? this.materials.shelltexture : this.pure);
+                }
+                if (obj.object == "jellyfish") {
+                    // animate jellyfish movement
+                    let jelly_movement = negorpos * (Math.sin(Math.PI * dt/4));
+                    let max_angle = .07 * Math.PI;
+                    let jelly_stretch = (1 + (max_angle/2) * (Math.sin(Math.PI*(dt/1.2))));
+                    transform = transform.times(Mat4.rotation(-33,1,0,0))
+                                         .times(Mat4.rotation(-66,0,1,0))
+                                         .times(Mat4.translation(0,0,jelly_movement,0))
+                                         .times(Mat4.rotation(jelly_movement,0,0,1))
+                                         .times(Mat4.scale(1,1,jelly_stretch,0))
+                                         .times(Mat4.scale(0.8,0.8,0.8,0));
+                    this.shapes.jellyfish.draw(context, program_state, transform,shadow_pass? this.materials.jellyfish.override({color:color}) : this.pure);
+                }
+                if (obj.object == "temple") {
+                    let temple_transform = Mat4.translation(position[0], position[1], position[2]);
+                    temple_transform = temple_transform.times(Mat4.scale(3.5,3.5,3.5,0))
+                    this.shapes.temple.draw(context, program_state, temple_transform,shadow_pass? this.materials.redwood : this.pure);
+                }
+
+            }
+        }
+
+        // Fill scene with fish & shark 
+        let left_fish_count = 1;
+        let right_fish_count = 5;
+        let shark_left_count = this.left_shark_count;
+        let shark_right_count = this.right_shark_count;
+        let fish_speed = 3;
+        let shark_speed = 3 + (3 - this.lifes)*4;
+
+        /*These for loops draw fishes and sharks and call collsion detection functions*/
+        if(this.lifes != 0){
+            for(let i = 0; i < left_fish_count; i++){
+                this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                this.detect_fish_collision_left(i, t/1000, fish_speed);
+            }
+            for(let i = 0; i < right_fish_count; i++){
+                this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                this.detect_fish_collision_right(i, t/1000, fish_speed);
+            }
+            for(let i = 0; i < shark_left_count; i++){
+                this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                this.detect_shark_collision_left(i, t/1000, shark_speed);
+            }
+            for(let i = 0; i < shark_right_count; i++){
+                this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                this.detect_shark_collision_right(i, t/1000, shark_speed);
+
+            }
+        }
+
+        // X,Y for turtle position --> controlled by player using arrow keys 
+        var y = this.y_movement;
+        var x = this.x_movement;
+        let max_flipper_angle = .05 * Math.PI;
+        let flipper_rot = ((max_flipper_angle/2) + (max_flipper_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+
+        //Draws turtle after drawing sharks and fishes
+        var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
+                                               .times(Mat4.translation(x/2,y/4,0,0))
+                                               .times(this.turtle_body_global);
+
+        let turtle_head = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
+                                               .times(Mat4.scale(0.5,0.5,0.2,0))
+                                               .times(Mat4.translation(x*1.5,y/1.1,0,0))
+                                               .times(this.turtle_head_global);
+        
+        let turtle_leg_tl_transform = model_transform.times(Mat4.translation(0, 1, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(-1.9, 0.5, 0.2, 0))
+                                               .times(this.turtle_larm_global);
+    
+        let turtle_leg_bl_transform = model_transform.times(Mat4.translation(0, -0.4, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(-1.9, -0.5, 0.2, 0))
+                                               .times(this.turtle_lleg_global);
+
+        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(0, 1, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(-flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(1.9, 0.5, 0.1, 0))
+                                               .times(this.turtle_rarm_global);
+        
+        let turtle_leg_br_transform = model_transform.times(Mat4.translation(0, -0.4, 0, 0))
+                                               .times(Mat4.scale(0.8,0.4,0.2,0))
+                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
+                                               .times(Mat4.rotation(-flipper_rot, 0,1,1))
+                                               .times(Mat4.translation(1.9, -0.5, 0.1, 0))
+                                               .times(this.turtle_rleg_global);
+
+        if(this.lifes != 0){
+            this.shapes.turtlebody.draw(context, program_state, turtle_body, shadow_pass? this.materials.turtle : this.pure);
+            this.shapes.fishbody.draw(context, program_state, turtle_head, shadow_pass? this.materials.turtlelimbs : this.pure);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
+        }
+        const max_coral_angle = .01 * Math.PI;
+        var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+
+
+        
+        let pink_coral_transform = model_transform.times(Mat4.translation(-22,0,-17,0))
+                                              .times(Mat4.scale(4,4,4,0))
+                                              .times(Mat4.rotation(-coral_sway, 0,0,1))
+        this.shapes.coral1.draw(context, program_state, pink_coral_transform, shadow_pass? this.materials.coral : this.pure);
+
+        let lightgreen_coral_transform = model_transform.times(Mat4.translation(-18,0,-17,0))
+                                              .times(Mat4.scale(4,4,3,0))
+                                              .times(Mat4.rotation(coral_sway, 0,0,1));    
+        this.shapes.coral2.draw(context, program_state, lightgreen_coral_transform, shadow_pass? this.materials.coral.override({color:hex_color("#8df2aa")}) : this.pure);
+
+        let purple_coral_transform = model_transform.times(Mat4.translation(-27,0,-17,0))
+                                              .times(Mat4.scale(4,6,4,0))
+                                              .times(Mat4.rotation(360,0,0,1))
+                                              .times(Mat4.rotation(coral_sway, 0,0,1));
+        this.shapes.coral2.draw(context, program_state, purple_coral_transform, shadow_pass? this.materials.coral.override({color:hex_color("#947fb8")}) : this.pure);
+
+        let orange_coral_transform = model_transform.times(Mat4.translation(15,0,-16,0))
+                                              .times(Mat4.scale(2,3,3,0))
+                                              .times(Mat4.rotation(-33,1,0,0))
+                                              .times(Mat4.rotation(coral_sway, 0,0,1));
+        this.shapes.coral6.draw(context, program_state, orange_coral_transform, shadow_pass? this.materials.coral.override({color:hex_color("#ffaf6e")}) : this.pure);
+
+        let periwinkle_coral_transform = model_transform.times(Mat4.translation(16,0,-22,0))
+                                              .times(Mat4.scale(5,6,3,0))
+                                              .times(Mat4.rotation(-coral_sway, 0,0,1));
+        this.shapes.coral1.draw(context, program_state, periwinkle_coral_transform, shadow_pass? this.materials.coral.override({color:hex_color("#6d85c2")}) : this.pure);
+
+        let green_coral_transform = model_transform.times(Mat4.translation(22,6,-16,0))
+                                              .times(Mat4.scale(3,4,3,0))
+                                              .times(Mat4.rotation(-33,1,0,0))
+                                              .times(Mat4.rotation(-coral_sway, 1,0,0));
+        this.shapes.coral4.draw(context, program_state, green_coral_transform, shadow_pass? this.materials.coral.override({color:hex_color("#a2e677")}) : this.pure);
+
+        let rock1_transform = model_transform.times(Mat4.translation(-34,0,-17,0))
+                                             .times(Mat4.scale(4,5,4,0));
+        this.shapes.rock.draw(context, program_state, rock1_transform, shadow_pass? this.materials.rock : this.pure);
+
+        let snail_transform = model_transform.times(Mat4.translation(-28,-1,-1,0))    
+                                             .times(Mat4.rotation(-33,1,0,0))
+                                             .times(Mat4.rotation(33,0,0,1))
+                                             .times(Mat4.translation(0,-t/8,0,0))
+        this.shapes.snail.draw(context, program_state, snail_transform, shadow_pass? this.materials.snail : this.pure);
+
+        if(this.lifes == 0){
+            let score_transform = Mat4.identity().times(Mat4.translation(-8.5,17.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+            let total_score = this.total_spent;
+            this.shapes.text.set_string("Total Spent:" + total_score.toString(), context.context);
+            this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
+            let game_over = score_transform.times(Mat4.translation(-1.5,1,1,0));
+            this.shapes.text.set_string("GAME OVER", context.context);
+            this.shapes.text.draw(context, program_state, game_over.times(Mat4.scale(.75, .75, .50)), this.materials.text_image);
+        }
+
+    }
 
 
     make_control_panel() {
@@ -267,7 +589,7 @@ export class Assignment2 extends Base_Scene {
     }
 
     /* Draws fishes coming from left*/
-    draw_fishes_left(context, program_state, model_transform, fish_count, t, speed) { 
+    draw_fishes_left(context, program_state, model_transform, fish_count, t, speed, shadow_pass) { 
             let fish_color = this.fish_color_array[fish_count];
             var x_cord = this.x_spawn_left[fish_count];
             var y_cord = this.y_spawn_left[fish_count];
@@ -277,7 +599,7 @@ export class Assignment2 extends Base_Scene {
                                               .times(Mat4.translation((t-this.time_offsets_left[fish_count])*speed,0,0,0))
                                               .times(Mat4.scale(0.8,0.6,0.5,1));
       
-            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies.override({color:fish_color}));
+            this.shapes.fishbody.draw(context, program_state, fish_trans, shadow_pass? this.materials.guppies.override({color:fish_color}) : this.pure);
 
             let max_angle = .1 * Math.PI;
             let tail_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t*4))));
@@ -287,18 +609,18 @@ export class Assignment2 extends Base_Scene {
                                              .times(Mat4.scale(1,1,1,1))
                                              .times(Mat4.rotation(-73,0,0,1))
                                              .times(Mat4.rotation(tail_rot,0,1,0));
-            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.tails.override({color:fish_color}));
+            this.shapes.tail.draw(context, program_state, tail_trans, shadow_pass? this.materials.tails.override({color:fish_color}) : this.pure);
         /* If fish off screen, we update it the time offset since we use time to translate in above bracket
            Also updated coordinates so it looks more random
         */
-        }else{
+        } else{
             this.new_fish_cord_left(fish_count, t);
         }
     }
     
 
     /* Draws fishes coming from right */    
-    draw_fishes_right(context, program_state, model_transform, fish_count, t, speed){
+    draw_fishes_right(context, program_state, model_transform, fish_count, t, speed, shadow_pass){
         let fish_color = this.fish_color_array[fish_count * 5];
         var fish = [];
         var x_cord = this.x_spawn_right[fish_count];
@@ -309,7 +631,7 @@ export class Assignment2 extends Base_Scene {
                                               .times(Mat4.translation(-(t-this.time_offsets_right[fish_count])*speed,0,0,0))
                                               .times(Mat4.scale(0.8,0.6,0.5,1));
       
-            this.shapes.fishbody.draw(context, program_state, fish_trans, this.materials.guppies.override({color:fish_color}));
+            this.shapes.fishbody.draw(context, program_state, fish_trans,shadow_pass? this.materials.guppies.override({color:fish_color}) : this.pure);
 
             let max_angle = .1 * Math.PI;
             let tail_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t*4))));
@@ -319,7 +641,7 @@ export class Assignment2 extends Base_Scene {
                                              .times(Mat4.scale(1,1,1,1))
                                              .times(Mat4.rotation(74.61,0,0,1))
                                              .times(Mat4.rotation(-tail_rot,0,1,0));
-            this.shapes.tail.draw(context, program_state, tail_trans, this.materials.tails.override({color:fish_color}));
+            this.shapes.tail.draw(context, program_state, tail_trans,shadow_pass? this.materials.tails.override({color:fish_color}) : this.pure);
         /* If fish off screen, we update it the time offset since we use time to translate in above bracket
            Also updated coordinates so it looks more random
         */
@@ -328,7 +650,7 @@ export class Assignment2 extends Base_Scene {
         }
         
     }
-    draw_shark_left(context, program_state, model_transform, shark_count, t, speed){
+    draw_shark_left(context, program_state, model_transform, shark_count, t, speed, shadow_pass){
         var x_cord = this.x_shark_spawn_left[shark_count];
         var y_cord = this.y_shark_spawn_left[shark_count];
         
@@ -338,30 +660,30 @@ export class Assignment2 extends Base_Scene {
             let shark_transform = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(3,1.5,1,1));
-            this.shapes.sharkbody.draw(context, program_state, shark_transform, this.materials.shark);
+            this.shapes.sharkbody.draw(context, program_state, shark_transform, shadow_pass? this.materials.shark : this.pure);
 
             let eye_transform = model_transform.times(Mat4.translation(x_cord+2, y_cord, 0.8, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(0.1,0.1,0.1,1));
-            this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
+            this.shapes.fishbody.draw(context, program_state, eye_transform, shadow_pass? this.materials.eye : this.pure);
 
             let tails_transform = model_transform.times(Mat4.translation(x_cord-3, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-74.7,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.shark);
+            this.shapes.tail.draw(context, program_state, tails_transform, shadow_pass? this.materials.shark : this.pure);
 
             let tails2_transform = model_transform.times(Mat4.translation(x_cord-3, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-27.4,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.shark);
+            this.shapes.tail.draw(context, program_state, tails2_transform, shadow_pass? this.materials.shark : this.pure);
 
             let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.2, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-145,0,0,1));
-            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.shark);
+            this.shapes.tail.draw(context, program_state, fin_transform, shadow_pass? this.materials.shark : this.pure);
 
         /* 
            If shark off screen, we update it the time offset since we use time to translate in above above bracket
@@ -373,7 +695,7 @@ export class Assignment2 extends Base_Scene {
 
     }
 
-    draw_shark_right(context, program_state, model_transform, shark_count, t, speed){
+    draw_shark_right(context, program_state, model_transform, shark_count, t, speed, shadow_pass){
         var x_cord = this.x_shark_spawn_right[shark_count];
         var y_cord = this.y_shark_spawn_right[shark_count];
         
@@ -382,30 +704,30 @@ export class Assignment2 extends Base_Scene {
             let shark_transform = model_transform.times(Mat4.translation(x_cord, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(3,1.5,1,1));
-            this.shapes.sharkbody.draw(context, program_state, shark_transform, this.materials.shark);
+            this.shapes.sharkbody.draw(context, program_state, shark_transform,shadow_pass? this.materials.shark : this.pure);
 
             let eye_transform = model_transform.times(Mat4.translation(x_cord-2, y_cord, 0.8, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(0.1,0.1,0.1,1));
-            this.shapes.fishbody.draw(context, program_state, eye_transform, this.materials.eye);
+            this.shapes.fishbody.draw(context, program_state, eye_transform,shadow_pass? this.materials.eye : this.pure);
 
             let tails_transform = model_transform.times(Mat4.translation(x_cord+3.03, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(20,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails_transform, this.materials.shark);
+            this.shapes.tail.draw(context, program_state, tails_transform,shadow_pass? this.materials.shark : this.pure);
 
             let tails2_transform = model_transform.times(Mat4.translation(x_cord+3.03, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(60,0,0,1));
-            this.shapes.tail.draw(context, program_state, tails2_transform, this.materials.shark);
+            this.shapes.tail.draw(context, program_state, tails2_transform,shadow_pass? this.materials.shark : this.pure);
 
             let fin_transform = model_transform.times(Mat4.translation(x_cord-0.5, y_cord+1.3, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
                                              .times(Mat4.rotation(-145,0,0,1));
-            this.shapes.tail.draw(context, program_state, fin_transform, this.materials.shark);
+            this.shapes.tail.draw(context, program_state, fin_transform,shadow_pass? this.materials.shark : this.pure);
 
         /* 
            If shark off screen, we update it the time offset since we use time to translate in above above bracket
@@ -490,17 +812,20 @@ export class Assignment2 extends Base_Scene {
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
         if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
-            for(let i = 0; i < this.left_shark_count; i++){
-                this.new_shark_cord_left(i, t);
-            }
-            for(let i = 0; i < this.right_shark_count; i++){
-                this.new_shark_cord_right(i, t);
-            }
-            this.lifes = this.lifes - 1;
+
+        for(let i = 0; i < this.left_shark_count; i++){        let shark_speed = 3 + (3 - this.lifes)*4;
+            this.new_shark_cord_left(i, t);
+        }
+        for(let i = 0; i < this.right_shark_count; i++){
+            this.new_shark_cord_right(i, t);
+        }
+
+        // this.new_shark_cord_left(shark_count);
+        this.lifes = this.lifes - 1;
         }
     }
 
-    detect_shark_collision_right(shark_count, t, speed){
+  detect_shark_collision_right(shark_count, t, speed){
         /* Gets current shark coordinates with respect to time */
         let shark_x_cord = this.x_shark_spawn_right[shark_count] - ((t-this.time_shark_offsets_right[shark_count])*speed);
         let shark_y_cord = this.y_shark_spawn_right[shark_count];
@@ -509,14 +834,18 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
-            for(let i = 0; i < this.shark_left_count; i++){
-                this.new_shark_cord_left(i, t);
-            }
-            for(let i = 0; i < this.shark_right_count; i++){
-                this.new_shark_cord_right(i, t);
-            }
-            this.lifes = this.lifes - 1;
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
+
+        for(let i = 0; i < this.left_shark_count; i++){
+            this.new_shark_cord_left(i, t);
+        }
+        for(let i = 0; i < this.right_shark_count; i++){
+            this.new_shark_cord_right(i, t);
+        }
+
+        // this.new_shark_cord_right(shark_count);
+        this.lifes = this.lifes - 1;
+
         }
     }
 
@@ -571,14 +900,14 @@ export class Assignment2 extends Base_Scene {
                                                       .times(Mat4.scale(50, 2, 0, 0))
         this.shapes.square.draw(context, program_state, menubar_trans, this.materials.menu);
 
-        // draw item 1: coral 1
+        // draw item 1: floral coral
         var item1_background_trans = model_transform.times(Mat4.translation(-23.5, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item1_trans = item1_background_trans.times(Mat4.translation(0.5, -0.25, 2, 0))
                                                 .times(Mat4.scale(0.38, 0.38, 1, 0))
                                                 .times(Mat4.rotation(-43.7, 0, 0, 1));
-        this.shapes.coral1.draw(context, program_state, item1_trans, this.materials.coral1.override({color:hex_color("#e691bc")}));
+        this.shapes.coral1.draw(context, program_state, item1_trans, this.materials.coral.override({color:hex_color("#e691bc")}));
 
         let item1_price_trans = model_transform.times(Mat4.translation(-26.1, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
@@ -586,17 +915,18 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.set_string("$"+ price1.toString(), context.context);
         this.shapes.text.draw(context, program_state, item1_price_trans, this.materials.text_image);
         
-        // get position of item 1
+        // get position of item 1 button
         let button1x = ((item1_background_trans[0][3]) - (-5)) / 22.5;
         let button1y = (item1_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if mouse click on item 1
+        // check if mouse click on item 1 button
         if ((this.mousex < button1x + 0.1 && this.mousex > button1x - 0.1) && (this.mousey < button1y + 0.12 && this.mousey > button1y - 0.1) && (this.sand_dollars - price1 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item1_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item1_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
+            
             // draw item on next mouse click          
             this.userdraw = "coral1";
             this.offset = price1;
@@ -620,17 +950,17 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.draw(context, program_state, item2_price_trans, this.materials.text_image);
         
 
-        // get position of item 2 
+        // get position of item 2 button 
         let button2x = ((item2_background_trans[0][3]) - (-5)) / 22.5;
         let button2y = (item2_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 2 is clicked 
+        // check if item 2 button is clicked 
         if ((this.mousex < button2x + 0.1 && this.mousex > button2x - 0.1) && (this.mousey < button2y + 0.12 && this.mousey > button2y - 0.1) && (this.sand_dollars - price2 >= 0))
         {
             var new_money = this.sand_dollars - price2;
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item2_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item2_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "rock";
@@ -641,13 +971,13 @@ export class Assignment2 extends Base_Scene {
         }
 
 
-        // draw item 3: coral 2 
+        // draw item 3: spiky coral
         let item3_background_trans = model_transform.times(Mat4.translation(-13, 20.8, 0, 0))
                                                         .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item3_trans = item3_background_trans.times(Mat4.translation(0.2, -0.25, 2, 0))
                                                     .times(Mat4.scale(0.5, 0.47, 1, 0));
-        this.shapes.coral2.draw(context, program_state, item3_trans, this.materials.coral1.override({color: hex_color("#f59f49")}));
+        this.shapes.coral2.draw(context, program_state, item3_trans, this.materials.coral.override({color: hex_color("#f59f49")}));
 
         let item3_price_trans = model_transform.times(Mat4.translation(-16, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
@@ -655,16 +985,16 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.set_string("$"+ price3.toString(), context.context);
         this.shapes.text.draw(context, program_state, item3_price_trans, this.materials.text_image);
         
-        // get position of item 3 
+        // get position of item 3 button 
         let button3x = ((item3_background_trans[0][3]) - (-5)) / 22.5;
         let button3y = (item3_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 3 is clicked 
+        // check if item 3 button is clicked 
         if ((this.mousex < button3x + 0.1 && this.mousex > button3x - 0.1) && (this.mousey < button3y + 0.12 && this.mousey > button3y - 0.1) && (this.sand_dollars - price3 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item3_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item3_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "coral2";
@@ -674,7 +1004,7 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, item3_background_trans, this.materials.menubuttons);
         }
 
-        // draw item 4: coral 6  
+        // draw item 4: golden squid  
         let item4_background_trans = model_transform.times(Mat4.translation(-7.6, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
@@ -689,16 +1019,16 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.draw(context, program_state, item4_price_trans, this.materials.text_image);
         
 
-        // get position of item 4 
+        // get position of item 4 button
         let button4x = ((item4_background_trans[0][3]) - (-5)) / 22.5;
         let button4y = (item4_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 4 is clicked 
+        // check if item 4 button is clicked 
         if ((this.mousex < button4x + 0.1 && this.mousex > button4x - 0.1) && (this.mousey < button4y + 0.12 && this.mousey > button4y - 0.1) && (this.sand_dollars - price4 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item4_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item4_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "squid";
@@ -714,7 +1044,7 @@ export class Assignment2 extends Base_Scene {
 
         let item5_trans = item5_background_trans.times(Mat4.translation(-0.1, -0.25, 2, 0))
                                                 .times(Mat4.scale(.5, .5, 1, 0))
-        this.shapes.starfish.draw(context, program_state, item5_trans, this.materials.coral1.override({color: hex_color("#ff892e")}));
+        this.shapes.starfish.draw(context, program_state, item5_trans, this.materials.coral.override({color: hex_color("#ff892e")}));
 
         let item5_price_trans = model_transform.times(Mat4.translation(-5.6, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
@@ -722,16 +1052,16 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.set_string("$"+ price5.toString(), context.context);
         this.shapes.text.draw(context, program_state, item5_price_trans, this.materials.text_image);
 
-        // get position of item 5 
+        // get position of item 5 button
         let button5x = ((item5_background_trans[0][3]) - (-5)) / 22.5;
         let button5y = (item5_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 5 is clicked 
+        // check if item 5 button is clicked 
         if ((this.mousex < button5x + 0.1 && this.mousex > button5x - 0.1) && (this.mousey < button5y + 0.12 && this.mousey > button5y - 0.1) && (this.sand_dollars - price5 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item5_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item5_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "starfish";
@@ -740,13 +1070,13 @@ export class Assignment2 extends Base_Scene {
         else {
             this.shapes.sphere.draw(context, program_state, item5_background_trans, this.materials.menubuttons);
         }
-        // draw item 6: shell  
+        // draw item 6: seashell  
         let item6_background_trans = model_transform.times(Mat4.translation(3, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item6_trans = item6_background_trans.times(Mat4.translation(0.2, -0.25, 2, 0))
                                                 .times(Mat4.scale(.4, .4, 1, 0))
-        this.shapes.shell1.draw(context, program_state, item6_trans, this.materials.coral1.override({color: hex_color("#f5988e")}));
+        this.shapes.shell1.draw(context, program_state, item6_trans, this.materials.coral.override({color: hex_color("#f5988e")}));
 
         let item6_price_trans = model_transform.times(Mat4.translation(-0.5, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
@@ -754,16 +1084,16 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.set_string("$"+ price6.toString(), context.context);
         this.shapes.text.draw(context, program_state, item6_price_trans, this.materials.text_image);
 
-        // get position of item 6
+        // get position of item 6 button
         let button6x = ((item6_background_trans[0][3]) - (-5)) / 22.5;
         let button6y = (item6_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 6 is clicked 
+        // check if item 6 button is clicked 
         if ((this.mousex < button6x + 0.1 && this.mousex > button6x - 0.1) && (this.mousey < button6y + 0.12 && this.mousey > button6y - 0.1) && (this.sand_dollars - price6 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item6_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item6_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "shell";
@@ -781,7 +1111,7 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.scale(.4, .35, 1, 0))
                                                 .times(Mat4.rotation(-33, 1, 0, 0))
                                                 .times(Mat4.rotation(-66, 0, 1, 0));
-        this.shapes.jellyfish.draw(context, program_state, item7_trans, this.materials.coral1.override({color: hex_color("#6ee7f0")}));
+        this.shapes.jellyfish.draw(context, program_state, item7_trans, this.materials.coral.override({color: hex_color("#6ee7f0")}));
 
         let item7_price_trans = model_transform.times(Mat4.translation(4.8, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
@@ -789,16 +1119,16 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.set_string("$"+ price7.toString(), context.context);
         this.shapes.text.draw(context, program_state, item7_price_trans, this.materials.text_image);
 
-        // get position of item 7
+        // get position of item 7 button
         let button7x = ((item7_background_trans[0][3]) - (-5)) / 22.5;
         let button7y = (item7_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 7 is clicked 
+        // check if item 7 button is clicked 
         if ((this.mousex < button7x + 0.1 && this.mousex > button7x - 0.1) && (this.mousey < button7y + 0.12 && this.mousey > button7y - 0.1) && (this.sand_dollars - price7 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item7_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item7_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click_scale          
             this.userdraw = "jellyfish";
@@ -808,7 +1138,7 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, item7_background_trans, this.materials.menubuttons);
         }
 
-        // draw item 8: treasure chest  
+        // draw item 8: temple  
         let item8_background_trans = model_transform.times(Mat4.translation(14, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
@@ -822,16 +1152,16 @@ export class Assignment2 extends Base_Scene {
         this.shapes.text.set_string("$"+ price8.toString(), context.context);
         this.shapes.text.draw(context, program_state, item8_price_trans, this.materials.text_image);
 
-        // get position of item 8
+        // get position of item 8 button
         let button8x = ((item8_background_trans[0][3]) - (-5)) / 22.5;
         let button8y = (item8_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 8 is clicked 
+        // check if item 8 button is clicked 
         if ((this.mousex < button8x + 0.1 && this.mousex > button8x - 0.1) && (this.mousey < button8y + 0.12 && this.mousey > button8y - 0.1) && (this.sand_dollars - price8 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
-            let click_scale = (t/6) % 0.08; 
-            let animate_click_transform = item8_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
+            let click_animate = (t/6) % 0.08; 
+            let animate_click_transform = item8_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);
             // draw item on next mouse click          
             this.userdraw = "temple";
@@ -840,13 +1170,14 @@ export class Assignment2 extends Base_Scene {
         else {
             this.shapes.sphere.draw(context, program_state, item8_background_trans, this.materials.menubuttons);
         }
-        //draw money count
+
+        // draw money count
         let dash_model = Mat4.identity().times(Mat4.translation(11.5,16.8,4,0)).times(Mat4.scale(1.3,1.3,0.2,5));
         let point_string = this.sand_dollars;
         this.shapes.text.set_string("$" + point_string.toString(), context.context);
         this.shapes.text.draw(context, program_state, dash_model.times(Mat4.scale(.50, .50, .50)), this.materials.text_image);
         
-        //draw lifes count
+        // draw lifes count
         let lifes_model = Mat4.identity().times(Mat4.translation(-23.5,16.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
         let lifes_string = this.lifes;
         this.shapes.text.set_string("lifes:" + lifes_string.toString(), context.context);
@@ -856,22 +1187,35 @@ export class Assignment2 extends Base_Scene {
 
     display(context, program_state) {                                 
     // display():  draw scene
+        const gl = context.context;
         let model_transform = Mat4.identity();
 
-        // time passed in seconds
-        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+        if (!this.init_ok) {
+            const ext = gl.getExtension('WEBGL_depth_texture');
+            if (!ext) {
+                return alert('need WEBGL_depth_texture');  // eslint-disable-line
+            }
+            this.texture_buffer_init(gl);
+
+            this.init_ok = true;
+        }
 
         // set lights
-        const light_position = vec4(-5, 20, 5, 1);
-        program_state.lights = [new Light(light_position, this.light_color, 1000)];     
+        this.light_position = vec4(-5, 20, 5, 1);
+        program_state.lights = [new Light(this.light_position, this.light_color, 1000)];
+
+        // pov of light
+        this.light_view_target = vec4(0, 0, 0, 1);
+        this.light_field_of_view = 130 * Math.PI / 180; // 130 degree     
            
         // allow player to change lighting color
         if (this.change_lighting_color){
             this.set_light_color();
             this.change_lighting_color = false;
         }
+        
 
-        // Set camera 
+        // set camera 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
@@ -880,291 +1224,57 @@ export class Assignment2 extends Base_Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
 
-        // Two rendering passes: 
 
-        // Draw Scene 1: erase, only use to generate texture
-        this.scratchpad_context.drawImage(context.canvas, 0, 0, 256, 256);
+        // Shadows
+        // set the perspective and camera to the POV of light
+        const light_view_mat = Mat4.look_at(
+            vec3(this.light_position[0], this.light_position[1], this.light_position[2]),
+            vec3(this.light_view_target[0], this.light_view_target[1], this.light_view_target[2]),
+            vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
+        );
+        const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 0.5, 500);
+        // Bind the Depth Texture Buffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
+        gl.viewport(0, 0, this.lightDepthTextureSize, this.lightDepthTextureSize);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // Prepare uniforms
+        program_state.light_view_mat = light_view_mat;
+        program_state.light_proj_mat = light_proj_mat;
+        program_state.light_tex_mat = light_proj_mat;
+        program_state.view_mat = light_view_mat;
+        program_state.projection_transform = light_proj_mat;
+        this.render_scene(context, program_state, false,false, false);
 
-        // Don't call copy to GPU until the event loop has had a chance
-        // to act on SRC setting once:
-        if (this.skipped_first_frame)
-            
-        // Update texture with current scene:
-        this.texture.copy_onto_graphics_card(context.context, false);
-        this.skipped_first_frame = true;
+        // Step 2: unbind, draw to the canvas
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        program_state.view_mat = program_state.camera_inverse;
+        program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 0.5, 500);
+        this.render_scene(context, program_state, true,true, true);
 
-        // Draw scene 2, never display scene 1: 
-        context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
-
-        // Screen measurements 
-        // length: -27.5 --> 17.5; midpoint = -5 ---> then 22.5 on either side
-        // height: -1.5 --> 22.5; midpoint = 10.5 ---> then 12 on either side 
-
+        // mouse position
         let canvas = context.canvas;
             const mouse_position = (e, rect = canvas.getBoundingClientRect()) =>
                 vec((e.clientX - (rect.left + rect.right) / 2) / ((rect.right - rect.left) / 2),
                     (e.clientY - (rect.bottom + rect.top) / 2) / ((rect.top - rect.bottom) / 2));
 
-        // when user clicks --> draw object at mouse position (if enabled)
+        // when user clicks --> draw object at mouse position (if they can afford it)
         canvas.addEventListener("mousedown", e => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect()
             this.mousex = mouse_position(e)[0];
             this.mousey = mouse_position(e)[1];
-            // this.mouse_draw(context, program_state, model_transform);
             this.mouse_draw_obj(context, program_state);
             });
-
-
-        // Draw aquarium background (water)
-        let background_transform = model_transform;
-        background_transform = background_transform.times(Mat4.rotation(0, 0, 1, 0))
-                                                   .times(Mat4.translation(0, 0, 0, 0))
-                                                   .times(Mat4.rotation(Math.PI/1.8 , 1, 0, 0))
-                                                   .times(Mat4.scale(60, 60, 60))
-                                                   .times(Mat4.rotation(t/40, 0, 1, 0));
-
-        this.shapes.waterbox.draw(context, program_state, background_transform, this.materials.b);
-
-        // Draw aquarium floor (sand)
-        let sand_transform = model_transform.times(Mat4.rotation(0, 0, 1, 0))
-                                            .times(Mat4.translation(0,0,0,0))
-                                            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
-                                            .times(Mat4.translation(0, 0, 2))
-                                            .times(Mat4.scale(50, 25, 0.5));
-
-        this.shapes.sand.draw(context, program_state, sand_transform, this.materials.sand);
-
-        // Draw menu bar if lifes are not 0
-        if(this.lifes != 0){
-            this.draw_menu_bar(context, program_state, model_transform, t);
-        }
-        // If player has purchased decorations --> draw them here
-        if (this.coral_queue.length > 0) {
-            for (let i = 0; i < this.coral_queue.length; i++) {
-                let obj = this.coral_queue[i];
-                let position = obj.pos;
-                let size = obj.size;
-                let color = obj.color;
-                let negorpos = obj.negorpos; 
-                let transform = Mat4.translation(position[0], position[1], position[2])
-                                    .times(Mat4.scale(size, size, size, 0));
- 
-                // If coral --> add sway effect 
-                var coral_angle = .01 * Math.PI;
-                var coral_sway = ((coral_angle/2) + (coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
-
-                if (obj.object == "coral1") {
-                    transform = transform.times(Mat4.rotation(coral_sway, 0,0,1))
-                    // straighten up coral (it tilts due to perspective projection)
-                    if (position[0] < 0){
-                        transform = transform.times(Mat4.rotation(-0.1, 0,0,1))
-                    }
-                    if (position[0] > 0){
-                        transform = transform.times(Mat4.rotation(0.1, 0,0,1))
-                    }
-                    this.shapes.coral1.draw(context, program_state, transform, this.materials.coral1.override({color:color}));
-                }
-                if (obj.object == "coral2") {
-                    transform = transform.times(Mat4.rotation(coral_sway, 0,0,1))
-                    this.shapes.coral2.draw(context, program_state, transform, this.materials.coral1.override({color:color}));
-                }
-                if (obj.object == "rock") {
-                    this.shapes.rock.draw(context, program_state, transform, this.materials.rock);
-                }
-                if (obj.object == "squid") {                
-                    let squid_movement = negorpos * (Math.sin(Math.PI * t/4));    
-                    transform = transform.times(Mat4.scale(2,1.5,2,0))
-                                         .times(Mat4.translation(0,squid_movement,0))
-                                         .times(Mat4.rotation(squid_movement,0,1,0))
-                    this.shapes.squid.draw(context, program_state, transform, this.materials.gold);
-                }
-                if (obj.object == "starfish") {
-                    transform = transform.times(Mat4.rotation(-45,1,0,0))
-                                         .times(Mat4.scale(0.4,0.4,0.4,0))
-                    this.shapes.starfish.draw(context, program_state, transform, this.materials.coral1.override({color:color}));
-                }
-
-                if (obj.object == "shell") {
-                    transform = transform.times(Mat4.scale(0.325,0.325,0.325,0))
-                    this.shapes.shell1.draw(context, program_state, transform, this.materials.coral1.override({color:color}));
-                }
-                if (obj.object == "jellyfish") {
-                    // animate jellyfish movement
-                    let jelly_movement = negorpos * (Math.sin(Math.PI * t/4));
-                    let max_angle = .07 * Math.PI;
-                    let jelly_stretch = (1 + (max_angle/2) * (Math.sin(Math.PI*(t/1.2))));
-                    transform = transform.times(Mat4.rotation(-33,1,0,0))
-                                         .times(Mat4.rotation(-66,0,1,0))
-                                         .times(Mat4.translation(0,0,jelly_movement,0))
-                                         .times(Mat4.rotation(jelly_movement,0,0,1))
-                                         .times(Mat4.scale(1,1,jelly_stretch,0))
-                                         .times(Mat4.scale(0.8,0.8,0.8,0));
-                    this.shapes.jellyfish.draw(context, program_state, transform, this.materials.jellyfish.override({color:color}));
-                }
-                if (obj.object == "temple") {
-                    let temple_transform = Mat4.translation(position[0], position[1], position[2]);
-                    temple_transform = temple_transform.times(Mat4.scale(3.5,3.5,3.5,0))
-                    this.shapes.temple.draw(context, program_state, temple_transform, this.materials.redwood);
-                }
-
-            }
-        }
-
-
-        // Fill scene with fish & shark 
-        let left_fish_count = 1;
-        let right_fish_count = 5;
-        let shark_left_count = this.left_shark_count;
-        let shark_right_count = this.right_shark_count;
-        let fish_speed = 3;
-        let shark_speed = 3 + (3 - this.lifes)*4;
-        
-        /*These for loops draw fishes and sharks and call collsion detection functions*/
-        if(this.lifes != 0){
-            for(let i = 0; i < left_fish_count; i++){
-                this.draw_fishes_left(context, program_state, model_transform, i, t, fish_speed);
-                this.detect_fish_collision_left(i, t, fish_speed);
-            }
-            for(let i = 0; i < right_fish_count; i++){
-                this.draw_fishes_right(context, program_state, model_transform, i, t, fish_speed);
-                this.detect_fish_collision_right(i, t, fish_speed);
-            }
-            for(let i = 0; i < shark_left_count; i++){
-                this.draw_shark_left(context, program_state, model_transform, i, t, shark_speed);
-                this.detect_shark_collision_left(i, t, shark_speed);
-            }
-            for(let i = 0; i < shark_right_count; i++){
-                this.draw_shark_right(context, program_state, model_transform, i, t, shark_speed);
-                this.detect_shark_collision_right(i, t, shark_speed);
-            }
-       }
-
-
-        // X,Y for turtle position --> controlled by player using arrow keys 
-        var y = this.y_movement;
-        var x = this.x_movement;
-        let max_flipper_angle = .05 * Math.PI;
-        let flipper_rot = ((max_flipper_angle/2) + (max_flipper_angle/2) * (Math.sin(Math.PI*(t*1.2))));
-
-        //Draws turtle after drawing sharks and fishes
-        var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
-                                               .times(Mat4.translation(x/2,y/4,0,0))
-                                               .times(this.turtle_body_global);
-
-        let turtle_head = model_transform.times(Mat4.translation(0, 1.9, 0, 0))
-                                               .times(Mat4.scale(0.5,0.5,0.2,0))
-                                               .times(Mat4.translation(x*1.5,y/1.1,0,0))
-                                               .times(this.turtle_head_global);
-        
-        let turtle_leg_tl_transform = model_transform.times(Mat4.translation(0, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
-                                               .times(Mat4.rotation(flipper_rot, 0,1,1))
-                                               .times(Mat4.translation(-1.9, 0.5, 0.2, 0))
-                                               .times(this.turtle_larm_global);
-    
-        let turtle_leg_bl_transform = model_transform.times(Mat4.translation(0, -0.4, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
-                                               .times(Mat4.rotation(flipper_rot, 0,1,1))
-                                               .times(Mat4.translation(-1.9, -0.5, 0.2, 0))
-                                               .times(this.turtle_lleg_global);
-
-        let turtle_leg_tr_transform = model_transform.times(Mat4.translation(0, 1, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
-                                               .times(Mat4.rotation(-flipper_rot, 0,1,1))
-                                               .times(Mat4.translation(1.9, 0.5, 0.1, 0))
-                                               .times(this.turtle_rarm_global);
-        
-        let turtle_leg_br_transform = model_transform.times(Mat4.translation(0, -0.4, 0, 0))
-                                               .times(Mat4.scale(0.8,0.4,0.2,0))
-                                               .times(Mat4.translation(x*0.94,y*1.1,0,0))
-                                               .times(Mat4.rotation(-flipper_rot, 0,1,1))
-                                               .times(Mat4.translation(1.9, -0.5, 0.1, 0))
-                                               .times(this.turtle_rleg_global);
-
-        if(this.lifes != 0){
-            this.shapes.turtlebody.draw(context, program_state, turtle_body, this.materials.turtle);
-            this.shapes.fishbody.draw(context, program_state, turtle_head, this.materials.turtlelimbs);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, this.materials.turtlelimbs);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
-            this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, this.materials.turtlelimbs);
-        }
-        const max_coral_angle = .01 * Math.PI;
-        var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
-
-
-        
-        let pink_coral_transform = model_transform.times(Mat4.translation(-22,0,-17,0))
-                                              .times(Mat4.scale(4,4,4,0))
-                                              .times(Mat4.rotation(-coral_sway, 0,0,1))
-        this.shapes.coral1.draw(context, program_state, pink_coral_transform, this.materials.coral1);
-
-        let lightgreen_coral_transform = model_transform.times(Mat4.translation(-18,0,-17,0))
-                                              .times(Mat4.scale(4,4,3,0))
-                                              .times(Mat4.rotation(coral_sway, 0,0,1));    
-        this.shapes.coral2.draw(context, program_state, lightgreen_coral_transform, this.materials.coral1.override({color:hex_color("#8df2aa")}));
-
-        let purple_coral_transform = model_transform.times(Mat4.translation(-27,0,-17,0))
-                                              .times(Mat4.scale(4,6,4,0))
-                                              .times(Mat4.rotation(360,0,0,1))
-                                              .times(Mat4.rotation(coral_sway, 0,0,1));
-        this.shapes.coral2.draw(context, program_state, purple_coral_transform, this.materials.coral1.override({color:hex_color("#947fb8")}));
-
-        let orange_coral_transform = model_transform.times(Mat4.translation(15,0,-16,0))
-                                              .times(Mat4.scale(2,3,3,0))
-                                              .times(Mat4.rotation(-33,1,0,0))
-                                              .times(Mat4.rotation(coral_sway, 0,0,1));
-        this.shapes.coral6.draw(context, program_state, orange_coral_transform, this.materials.coral1.override({color:hex_color("#ffaf6e")}));
-
-        let periwinkle_coral_transform = model_transform.times(Mat4.translation(16,0,-22,0))
-                                              .times(Mat4.scale(5,6,3,0))
-                                              .times(Mat4.rotation(-coral_sway, 0,0,1));
-        this.shapes.coral1.draw(context, program_state, periwinkle_coral_transform, this.materials.coral1.override({color:hex_color("#6d85c2")}));
-
-        let green_coral_transform = model_transform.times(Mat4.translation(22,6,-16,0))
-                                              .times(Mat4.scale(3,4,3,0))
-                                              .times(Mat4.rotation(-33,1,0,0))
-                                              .times(Mat4.rotation(-coral_sway, 1,0,0));
-        this.shapes.coral4.draw(context, program_state, green_coral_transform, this.materials.coral1.override({color:hex_color("#a2e677")}));
-
-        let rock1_transform = model_transform.times(Mat4.translation(-34,0,-17,0))
-                                             .times(Mat4.scale(4,5,4,0));
-        this.shapes.rock.draw(context, program_state, rock1_transform, this.materials.rock);
-
-        let snail_transform = model_transform.times(Mat4.translation(-28,-1,-1,0))    
-                                             .times(Mat4.rotation(-33,1,0,0))
-                                             .times(Mat4.rotation(33,0,0,1))
-                                             .times(Mat4.translation(0,-t/8,0,0))
-        this.shapes.snail.draw(context, program_state, snail_transform, this.materials.snail);
-
-
-//         let coral1_transform = model_transform.times(Mat4.translation(-22,3.5,0,0));
-//         this.shapes.coral1.draw(context, program_state, coral1_transform, this.materials.coral1);
-
-//         let coral1_transform = model_transform.times(Mat4.translation(-22,3.5,0,0));
-//         this.shapes.coral1.draw(context, program_state, coral1_transform, this.materials.coral1);
-        //game over message
-        if(this.lifes == 0){
-            let score_transform = Mat4.identity().times(Mat4.translation(-8.5,17.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
-            let total_score = this.total_spent;
-            this.shapes.text.set_string("Total Spent:" + total_score.toString(), context.context);
-            this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
-            let game_over = score_transform.times(Mat4.translation(-1.5,1,1,0));
-            this.shapes.text.set_string("GAME OVER", context.context);
-            this.shapes.text.draw(context, program_state, game_over.times(Mat4.scale(.75, .75, .50)), this.materials.text_image);
-        }
+                
     }
 
 }
 
+// CUSTOM SHADERS
+
 class Jellyfish_Shader extends Shader {
     // This is a Shader using Phong_Shader as template
-    // TODO: Modify the glsl coder here to create a Gouraud Shader (Planet 2)
-
     constructor(num_lights = 2) {
         super();
         this.num_lights = num_lights;
