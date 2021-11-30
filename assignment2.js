@@ -16,7 +16,7 @@ class Base_Scene extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-
+        
         // Sounds
         this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
         this.munch_sound = new Audio("assets/munch.mp3"); 
@@ -334,7 +334,7 @@ export class Assignment2 extends Base_Scene {
                 }
 
                 if (obj.object == "shell") {
-                    transform = transform.times(Mat4.scale(0.325,0.325,0.325,0))
+                    transform = transform.times(Mat4.scale(0.2,0.2,0.2,0))
                     this.shapes.shell1.draw(context, program_state, transform, shadow_pass? this.materials.shelltexture : this.pure);
                 }
                 if (obj.object == "jellyfish") {
@@ -496,6 +496,12 @@ export class Assignment2 extends Base_Scene {
             let game_over = score_transform.times(Mat4.translation(-1.5,1,1,0));
             this.shapes.text.set_string("GAME OVER", context.context);
             this.shapes.text.draw(context, program_state, game_over.times(Mat4.scale(.75, .75, .50)), this.materials.text_image);
+            let take_pix1 = score_transform.times(Mat4.translation(-12,1.5,1,0));
+            this.shapes.text.set_string("Don't forget to take a picture", context.context);
+            this.shapes.text.draw(context, program_state, take_pix1.times(Mat4.scale(.2, .2, .50)), this.materials.text_image);
+            let take_pix2 = take_pix1.times(Mat4.translation(2,-1,1,0));
+            this.shapes.text.set_string("of your aquarium!", context.context);
+            this.shapes.text.draw(context, program_state, take_pix2.times(Mat4.scale(.2, .2, .50)), this.materials.text_image);
         }
 
     }
@@ -547,6 +553,7 @@ export class Assignment2 extends Base_Scene {
             // loop background audio
             this.background_sound.pause(); 
         });
+
     }
 
     set_fish_colors() {
@@ -1251,6 +1258,7 @@ export class Assignment2 extends Base_Scene {
         program_state.view_mat = program_state.camera_inverse;
         program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 0.5, 500);
         this.render_scene(context, program_state, true,true, true);
+        
 
         // mouse position
         let canvas = context.canvas;
