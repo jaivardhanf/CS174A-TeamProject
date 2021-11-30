@@ -74,6 +74,8 @@ class Base_Scene extends Scene {
             temple: new Shape_From_File("assets/temple.obj"),
             hemi: new Shape_From_File("assets/hemi.obj"),
             squid: new Shape_From_File("assets/squid.obj"),
+            text: new Text_Line(35),
+
 
         };
         
@@ -125,6 +127,10 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/gold.jpg")}),
             redwood: new Material(textured,
                 {ambient: 0.9, diffusivity: .9, texture: new Texture("assets/redwood.jpg")}),
+            text_image: new Material(textured, 
+                {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
+            dash_board: new Material(textured,
+                {ambient: 0.2, diffusivity: .9, color: hex_color("#000000")}),
 
         };
 
@@ -134,19 +140,19 @@ class Base_Scene extends Scene {
         
         /* Coordinates and time offsets for fishes & sharks */
         this.x_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * (-100 +30) -30));
-        this.y_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.y_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
         this.time_offsets_left = Array(5).fill(0);
 
         this.x_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (100 - 30) + 30));
-        this.y_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.y_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
         this.time_offsets_right = Array(5).fill(0);
 
         this.x_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * (-100 + 30) -30));
-        this.y_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.y_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
         this.time_shark_offsets_left = Array(5).fill(0);
 
         this.x_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (100 - 30) + 30));
-        this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 20));
+        this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
         this.time_shark_offsets_right = Array(5).fill(0);
 
         //Used to keep track of scaling of turtle during collision detection        
@@ -159,24 +165,18 @@ class Base_Scene extends Scene {
 
         //Used to readjust sensitivity of collisoin detection when turtle grows/decreases
         this.collision_count = 0;
-         
+        this.sand_dollars = 0;
+        this.total_spent = 0;
+        this.lifes = 3;
+        this.draw_in_prog = false;
+        this.offset = 0;
+        this.left_shark_count = 3;
+        this.right_shark_count = 3;
 ;
     }
 }
 
 export class Assignment2 extends Base_Scene {  
-
-    turtle_south(){
-        //const t = program_state.animation_time / 1000;
-        console.log("Turtle south called");
-        //this.turtle_body_global = this.turtle_body_global.times(Mat4.rotation(-180,0,0,1));
-        //this.turtle_head_global = this.turtle_head_global.times(Mat4.rotation(-180,0,90,1));
-        //this.turtle_larm_global = this.turtle_larm_global.times(Mat4.rotation(0,0,90,0));
-        //this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.rotation(0,0,90,0));
-        //this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.rotation(0,0,90,0));
-        //this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.rotation(0,0,90,0));
-    }
-
 
 
     make_control_panel() {
@@ -189,8 +189,6 @@ export class Assignment2 extends Base_Scene {
         // Down Movement (arrow key down)
         this.key_triggered_button("Down", ['ArrowDown'], () => {
             this.y_movement = this.y_movement - 1; 
-            this.turtle_south();
-
         });
         
         // Left Movement (arrow key left)
@@ -241,24 +239,31 @@ export class Assignment2 extends Base_Scene {
     }
 
     /* When called, the following functions give new coordinates to a specefic */
-    new_fish_cord_left(fish_count){
-        this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-100 +30) -30);
-        this.y_spawn_left[fish_count] = Math.floor(Math.random() * 20);
+    new_fish_cord_left(fish_count, t){
+        this.x_spawn_left[fish_count] = Math.floor(Math.random() * (-150 +30) -30);
+        this.y_spawn_left[fish_count] = Math.floor(Math.random() * 18);
+        this.time_offsets_left[fish_count] = t;
     }
 
-    new_fish_cord_right(fish_count){
+    new_fish_cord_right(fish_count,t){
         this.x_spawn_right[fish_count] = Math.floor(Math.random() * (100 - 30) + 30);
-        this.y_spawn_right[fish_count] = Math.floor(Math.random() * 20);
+        this.y_spawn_right[fish_count] = Math.floor(Math.random() * 18);
+        this.time_offsets_right[fish_count] = t;
+
     }
 
-    new_shark_cord_left(shark_count){
-        this.x_shark_spawn_left[shark_count] = Math.floor(Math.random() * (-100 +30) -30);
-        this.y_shark_spawn_left[shark_count] = Math.floor(Math.random() * 20);
+    new_shark_cord_left(shark_count, t){
+        this.x_shark_spawn_left[shark_count] = Math.floor(Math.random() * (-150 +50) -50);
+        this.y_shark_spawn_left[shark_count] = Math.floor(Math.random() * 18);
+        this.time_shark_offsets_left[shark_count] = t;
+
     }
 
-    new_shark_cord_right(shark_count){
-        this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (100 - 30) + 30);
-        this.y_shark_spawn_right[shark_count] = Math.floor(Math.random() * 20);
+    new_shark_cord_right(shark_count, t){
+        this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (150 - 50) + 50);
+        this.y_shark_spawn_right[shark_count] = Math.floor(Math.random() * 18);
+        this.time_shark_offsets_right[shark_count] = t;
+
     }
 
     /* Draws fishes coming from left*/
@@ -287,8 +292,7 @@ export class Assignment2 extends Base_Scene {
            Also updated coordinates so it looks more random
         */
         }else{
-            this.time_offsets_left[fish_count] = t;
-            this.new_fish_cord_left[fish_count];
+            this.new_fish_cord_left(fish_count, t);
         }
     }
     
@@ -320,13 +324,10 @@ export class Assignment2 extends Base_Scene {
            Also updated coordinates so it looks more random
         */
         }else{
-            this.time_offsets_right[fish_count] = t;
-            this.new_fish_cord_right[fish_count];
-
+            this.new_fish_cord_right(fish_count, t);
         }
         
     }
-
     draw_shark_left(context, program_state, model_transform, shark_count, t, speed){
         var x_cord = this.x_shark_spawn_left[shark_count];
         var y_cord = this.y_shark_spawn_left[shark_count];
@@ -367,9 +368,7 @@ export class Assignment2 extends Base_Scene {
            Also updated coordinates so it looks more random
         */
         }else{
-            this.time_shark_offsets_left[shark_count] = t;
-            this.x_shark_spawn_left[shark_count] = Math.floor(Math.random() * (-100 + 30) - 30);
-            this.y_shark_spawn_left[shark_count] = Math.floor(Math.random() * 20);
+            this.new_shark_cord_left(shark_count, t);
         }
 
     }
@@ -413,56 +412,31 @@ export class Assignment2 extends Base_Scene {
            Also updated coordinates so it looks more random
         */
         }else{
-            this.time_shark_offsets_right[shark_count] = t;
-            this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (100 - 30) + 30);
-            this.y_shark_spawn_right[shark_count] = Math.floor(Math.random() * 20);
+            this.new_shark_cord_right(shark_count, t);
         }
 
     }
 
     /* Called when collision is detected with fish, scales turtle bigger */
     collision_scale(){
-        this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(1.1,1.1,1,0));
-        this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(1.1,1.1,1.1,0))
-                                                         .times(Mat4.translation(0,0.3,0));
+        this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(1.015,1.015,1,0));
+        this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(1.015,1.015,1.015,0))
+                                                         .times(Mat4.translation(0,0.025,0));
         
 
-        this.turtle_larm_global = this.turtle_larm_global.times(Mat4.scale(1.1,1.1,1.1,0))
-                                                         .times(Mat4.translation(-0.15,0.15,0));
+        this.turtle_larm_global = this.turtle_larm_global.times(Mat4.scale(1.015,1.015,1.015,0))
+                                                         .times(Mat4.translation(-0.025,0.025,0));
     
-        this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.scale(1.1,1.1,1.1,0))
-                                                         .times(Mat4.translation(0.15,0.15,0));
+        this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.scale(1.015,1.015,1.015,0))
+                                                         .times(Mat4.translation(0.025,0.025,0));
         
-        this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.scale(1.1,1.1,1.1,0))
-                                                         .times(Mat4.translation(-0.15,-0.15,0));
+        this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.scale(1.015,1.015,1.015,0))
+                                                         .times(Mat4.translation(-0.025,-0.025,0));
         
-        this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(1.1,1.1,1.1,0))
-                                                         .times(Mat4.translation(0.15,-0.15,0));
+        this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(1.015,1.015,1.015,0))
+                                                         .times(Mat4.translation(0.025,-0.025,0));
         //used for collision detection sensitivity
         this.collision_count = this.collision_count + 1;
-    }
-
-    /* Called when collsion is detected with shark, scales turtle smaller */
-    collision_unscale(){
-        this.turtle_body_global = this.turtle_body_global.times(Mat4.scale(0.9,0.9,0.9,0));
-        this.turtle_head_global = this.turtle_head_global.times(Mat4.scale(0.9,0.9,0.9,0))
-                                                         .times(Mat4.translation(0,-0.3,0));
-        
-
-        this.turtle_larm_global = this.turtle_larm_global.times(Mat4.scale(0.9,0.9,0.9,0))
-                                                         .times(Mat4.translation(0.15,-0.15,0));
-    
-        this.turtle_rarm_global = this.turtle_rarm_global.times(Mat4.scale(0.9,0.9,0.9,0))
-                                                         .times(Mat4.translation(-0.15,-0.15,0));
-        
-        this.turtle_lleg_global = this.turtle_lleg_global.times(Mat4.scale(0.9,0.9,0.9,0))
-                                                         .times(Mat4.translation(0.15,0.15,0));
-        
-        this.turtle_rleg_global = this.turtle_rleg_global.times(Mat4.scale(0.9,0.9,0.9,0))
-                                                         .times(Mat4.translation(-0.15,0.15,0));
-        
-        //used for collision detection sensitivity
-        this.collision_count = this.collision_count - 1;
     }
 
 
@@ -480,10 +454,11 @@ export class Assignment2 extends Base_Scene {
         //fish_x_cord converted to turtle_x coords using equation: Turtle-Y_cord = fish_y_cord(59/44) - 9/44
         let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
         let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
-        if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
+        if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.05) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3.2 + this.collision_count*0.075)){
             this.munch_sound.play();
-            this.new_fish_cord_left(fish_count);
-            this.collision_scale();         
+            this.new_fish_cord_left(fish_count, t);
+            this.collision_scale();
+            this.sand_dollars = this.sand_dollars + 2;         
         }
     }
 
@@ -496,10 +471,11 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and fishes coordinates on the same scale */
         let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
         let fish_to_turtle_y = fish_y_cord*(37/17) + 19/17;
-        if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.45) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3 + this.collision_count*0.65)){
+        if((Math.abs(fish_to_turtle_x - turtle_x) < 2 + this.collision_count*0.05) && (Math.abs(fish_to_turtle_y - this.y_movement) < 3.2 + this.collision_count*0.075)){
             this.munch_sound.play();
-            this.new_fish_cord_right(fish_count);
+            this.new_fish_cord_right(fish_count,t);
             this.collision_scale();
+            this.sand_dollars = this.sand_dollars + 2; 
         }
     }
 
@@ -513,11 +489,14 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
-            this.new_shark_cord_left(shark_count);
-            if(this.collision_count > 0){
-                this.collision_unscale();
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
+            for(let i = 0; i < this.left_shark_count; i++){
+                this.new_shark_cord_left(i, t);
             }
+            for(let i = 0; i < this.right_shark_count; i++){
+                this.new_shark_cord_right(i, t);
+            }
+            this.lifes = this.lifes - 1;
         }
     }
 
@@ -530,11 +509,14 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
-            this.new_shark_cord_right(shark_count);
-            if(this.collision_count > 0){
-                this.collision_unscale();
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
+            for(let i = 0; i < this.shark_left_count; i++){
+                this.new_shark_cord_left(i, t);
             }
+            for(let i = 0; i < this.shark_right_count; i++){
+                this.new_shark_cord_right(i, t);
+            }
+            this.lifes = this.lifes - 1;
         }
     }
 
@@ -576,6 +558,9 @@ export class Assignment2 extends Base_Scene {
                 object: this.userdraw
             }
             this.userdraw = "none";
+            this.sand_dollars = this.sand_dollars - this.offset;
+            this.total_spent = this.total_spent + this.offset;
+            this.offset = 0; 
             this.coral_queue.push(obj); 
         }
     }
@@ -595,21 +580,18 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.rotation(-43.7, 0, 0, 1));
         this.shapes.coral1.draw(context, program_state, item1_trans, this.materials.coral1.override({color:hex_color("#e691bc")}));
 
-        let item1_price_trans = model_transform.times(Mat4.translation(-25, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item1_price_trans, this.materials.eight);
-
-        let dollarsign1_trans = item1_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign1_trans, this.materials.dollarsign);
-
-
+        let item1_price_trans = model_transform.times(Mat4.translation(-26.1, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price1 = 2;
+        this.shapes.text.set_string("$"+ price1.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item1_price_trans, this.materials.text_image);
+        
         // get position of item 1
         let button1x = ((item1_background_trans[0][3]) - (-5)) / 22.5;
         let button1y = (item1_background_trans[1][3] - (10.5)) / 12; 
 
         // check if mouse click on item 1
-        if ((this.mousex < button1x + 0.1 && this.mousex > button1x - 0.1) && (this.mousey < button1y + 0.12 && this.mousey > button1y - 0.1))
+        if ((this.mousex < button1x + 0.1 && this.mousex > button1x - 0.1) && (this.mousey < button1y + 0.12 && this.mousey > button1y - 0.1) && (this.sand_dollars - price1 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
@@ -617,40 +599,42 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "coral1";
+            this.offset = price1;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item1_background_trans, this.materials.menubuttons);
         }
 
         // draw item 2: rock 
-        let item2_background_trans = model_transform.times(Mat4.translation(-18.4, 20.8, 0, 0))
+        let item2_background_trans = model_transform.times(Mat4.translation(-18.3, 20.8, 0, 0))
                                         .times(Mat4.scale(1.4, 1.4, .5, 0))
 
         let item2_trans = item2_background_trans.times(Mat4.translation(0.3, -0.25, 2, 0))
                                                 .times(Mat4.scale(0.65, 0.65, 1, 0));
         this.shapes.rock.draw(context, program_state, item2_trans, this.materials.rock);
 
-        let item2_price_trans = model_transform.times(Mat4.translation(-20, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item2_price_trans, this.materials.eight);
-
-        let dollarsign2_trans = item2_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign2_trans, this.materials.dollarsign);
+        let item2_price_trans = model_transform.times(Mat4.translation(-21, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price2 = 1;
+        this.shapes.text.set_string("$"+ price2.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item2_price_trans, this.materials.text_image);
+        
 
         // get position of item 2 
         let button2x = ((item2_background_trans[0][3]) - (-5)) / 22.5;
         let button2y = (item2_background_trans[1][3] - (10.5)) / 12; 
 
         // check if item 2 is clicked 
-        if ((this.mousex < button2x + 0.1 && this.mousex > button2x - 0.1) && (this.mousey < button2y + 0.12 && this.mousey > button2y - 0.1))
+        if ((this.mousex < button2x + 0.1 && this.mousex > button2x - 0.1) && (this.mousey < button2y + 0.12 && this.mousey > button2y - 0.1) && (this.sand_dollars - price2 >= 0))
         {
+            var new_money = this.sand_dollars - price2;
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
             let animate_click_transform = item2_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "rock";
+            this.offset = price2;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item2_background_trans, this.materials.menubuttons);
@@ -665,20 +649,18 @@ export class Assignment2 extends Base_Scene {
                                                     .times(Mat4.scale(0.5, 0.47, 1, 0));
         this.shapes.coral2.draw(context, program_state, item3_trans, this.materials.coral1.override({color: hex_color("#f59f49")}));
 
-        let item3_price_trans = model_transform.times(Mat4.translation(-15, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item3_price_trans, this.materials.eight);
-
-        let dollarsign3_trans = item3_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign3_trans, this.materials.dollarsign);
-
+        let item3_price_trans = model_transform.times(Mat4.translation(-16, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price3 = 3;
+        this.shapes.text.set_string("$"+ price3.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item3_price_trans, this.materials.text_image);
+        
         // get position of item 3 
         let button3x = ((item3_background_trans[0][3]) - (-5)) / 22.5;
         let button3y = (item3_background_trans[1][3] - (10.5)) / 12; 
 
         // check if item 3 is clicked 
-        if ((this.mousex < button3x + 0.1 && this.mousex > button3x - 0.1) && (this.mousey < button3y + 0.12 && this.mousey > button3y - 0.1))
+        if ((this.mousex < button3x + 0.1 && this.mousex > button3x - 0.1) && (this.mousey < button3y + 0.12 && this.mousey > button3y - 0.1) && (this.sand_dollars - price3 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
@@ -686,6 +668,7 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "coral2";
+            this.offset = price3;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item3_background_trans, this.materials.menubuttons);
@@ -699,20 +682,19 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.scale(.7, .33, 1, 0))
         this.shapes.squid.draw(context, program_state, item4_trans, this.materials.gold);
 
-        let item4_price_trans = model_transform.times(Mat4.translation(-9.8, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item4_price_trans, this.materials.eight);
-
-        let dollarsign4_trans = item4_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign4_trans, this.materials.dollarsign);
+        let item4_price_trans = model_transform.times(Mat4.translation(-10.8, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price4 = 9;
+        this.shapes.text.set_string("$"+ price4.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item4_price_trans, this.materials.text_image);
+        
 
         // get position of item 4 
         let button4x = ((item4_background_trans[0][3]) - (-5)) / 22.5;
         let button4y = (item4_background_trans[1][3] - (10.5)) / 12; 
 
         // check if item 4 is clicked 
-        if ((this.mousex < button4x + 0.1 && this.mousex > button4x - 0.1) && (this.mousey < button4y + 0.12 && this.mousey > button4y - 0.1))
+        if ((this.mousex < button4x + 0.1 && this.mousex > button4x - 0.1) && (this.mousey < button4y + 0.12 && this.mousey > button4y - 0.1) && (this.sand_dollars - price4 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
@@ -720,6 +702,7 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "squid";
+            this.offset = price4;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item4_background_trans, this.materials.menubuttons);
@@ -733,20 +716,18 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.scale(.5, .5, 1, 0))
         this.shapes.starfish.draw(context, program_state, item5_trans, this.materials.coral1.override({color: hex_color("#ff892e")}));
 
-        let item5_price_trans = model_transform.times(Mat4.translation(-4.5, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item5_price_trans, this.materials.eight.override({diffusivity: 0, specularity:0}));
+        let item5_price_trans = model_transform.times(Mat4.translation(-5.6, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price5 = 5;
+        this.shapes.text.set_string("$"+ price5.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item5_price_trans, this.materials.text_image);
 
-        let dollarsign5_trans = item5_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign5_trans, this.materials.dollarsign.override({diffusivity: 0, specularity:0}));
-
-        // get position of item 4 
+        // get position of item 5 
         let button5x = ((item5_background_trans[0][3]) - (-5)) / 22.5;
         let button5y = (item5_background_trans[1][3] - (10.5)) / 12; 
 
-        // check if item 4 is clicked 
-        if ((this.mousex < button5x + 0.1 && this.mousex > button5x - 0.1) && (this.mousey < button5y + 0.12 && this.mousey > button5y - 0.1))
+        // check if item 5 is clicked 
+        if ((this.mousex < button5x + 0.1 && this.mousex > button5x - 0.1) && (this.mousey < button5y + 0.12 && this.mousey > button5y - 0.1) && (this.sand_dollars - price5 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
@@ -754,6 +735,7 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "starfish";
+            this.offset = price5;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item5_background_trans, this.materials.menubuttons);
@@ -766,20 +748,18 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.scale(.4, .4, 1, 0))
         this.shapes.shell1.draw(context, program_state, item6_trans, this.materials.coral1.override({color: hex_color("#f5988e")}));
 
-        let item6_price_trans = model_transform.times(Mat4.translation(0.6, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item6_price_trans, this.materials.eight);
-
-        let dollarsign6_trans = item6_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign6_trans, this.materials.dollarsign);
+        let item6_price_trans = model_transform.times(Mat4.translation(-0.5, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price6 = 4;
+        this.shapes.text.set_string("$"+ price6.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item6_price_trans, this.materials.text_image);
 
         // get position of item 6
         let button6x = ((item6_background_trans[0][3]) - (-5)) / 22.5;
         let button6y = (item6_background_trans[1][3] - (10.5)) / 12; 
 
         // check if item 6 is clicked 
-        if ((this.mousex < button6x + 0.1 && this.mousex > button6x - 0.1) && (this.mousey < button6y + 0.12 && this.mousey > button6y - 0.1))
+        if ((this.mousex < button6x + 0.1 && this.mousex > button6x - 0.1) && (this.mousey < button6y + 0.12 && this.mousey > button6y - 0.1) && (this.sand_dollars - price6 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
@@ -787,6 +767,7 @@ export class Assignment2 extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
             // draw item on next mouse click          
             this.userdraw = "shell";
+            this.offset = price6;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item6_background_trans, this.materials.menubuttons);
@@ -802,27 +783,26 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.rotation(-66, 0, 1, 0));
         this.shapes.jellyfish.draw(context, program_state, item7_trans, this.materials.coral1.override({color: hex_color("#6ee7f0")}));
 
-        let item7_price_trans = model_transform.times(Mat4.translation(5.8, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item7_price_trans, this.materials.eight);
-
-        let dollarsign7_trans = item7_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign7_trans, this.materials.dollarsign);
+        let item7_price_trans = model_transform.times(Mat4.translation(4.8, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price7 = 7;
+        this.shapes.text.set_string("$"+ price7.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item7_price_trans, this.materials.text_image);
 
         // get position of item 7
         let button7x = ((item7_background_trans[0][3]) - (-5)) / 22.5;
         let button7y = (item7_background_trans[1][3] - (10.5)) / 12; 
 
         // check if item 7 is clicked 
-        if ((this.mousex < button7x + 0.1 && this.mousex > button7x - 0.1) && (this.mousey < button7y + 0.12 && this.mousey > button7y - 0.1))
+        if ((this.mousex < button7x + 0.1 && this.mousex > button7x - 0.1) && (this.mousey < button7y + 0.12 && this.mousey > button7y - 0.1) && (this.sand_dollars - price7 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
             let animate_click_transform = item7_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
-            // draw item on next mouse click          
+            // draw item on next mouse click_scale          
             this.userdraw = "jellyfish";
+            this.offset = price7;       
         }
         else {
             this.shapes.sphere.draw(context, program_state, item7_background_trans, this.materials.menubuttons);
@@ -836,31 +816,42 @@ export class Assignment2 extends Base_Scene {
                                                 .times(Mat4.scale(0.4, 0.4, 0.4, 0));
         this.shapes.temple.draw(context, program_state, item8_trans, this.materials.redwood);
 
-        let item8_price_trans = model_transform.times(Mat4.translation(11.1, 20.4, 1, 0))
-                                               .times(Mat4.scale(0.5, 0.5, 1, 0))
-        this.shapes.square.draw(context, program_state, item8_price_trans, this.materials.eight);
-
-        let dollarsign8_trans = item8_price_trans.times(Mat4.translation(-2, 0, 0, 0))
-                                                 .times(Mat4.scale(0.7, 0.7, 1, 0))
-        this.shapes.square.draw(context, program_state, dollarsign8_trans, this.materials.dollarsign);
+        let item8_price_trans = model_transform.times(Mat4.translation(10, 20.3, 1, 0))
+                                               .times(Mat4.scale(0.75, 0.75, 1, 0))
+        var price8 = 8;
+        this.shapes.text.set_string("$"+ price8.toString(), context.context);
+        this.shapes.text.draw(context, program_state, item8_price_trans, this.materials.text_image);
 
         // get position of item 8
         let button8x = ((item8_background_trans[0][3]) - (-5)) / 22.5;
         let button8y = (item8_background_trans[1][3] - (10.5)) / 12; 
 
         // check if item 8 is clicked 
-        if ((this.mousex < button8x + 0.1 && this.mousex > button8x - 0.1) && (this.mousey < button8y + 0.12 && this.mousey > button8y - 0.1))
+        if ((this.mousex < button8x + 0.1 && this.mousex > button8x - 0.1) && (this.mousey < button8y + 0.12 && this.mousey > button8y - 0.1) && (this.sand_dollars - price8 >= 0))
         {
             // if clicked --> animate item so that we know it is clicked
             let click_scale = (t/6) % 0.08; 
             let animate_click_transform = item8_background_trans.times(Mat4.scale(1 + click_scale, 1 + click_scale, 1, 0));
-            this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);  
+            this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);
             // draw item on next mouse click          
             this.userdraw = "temple";
+            this.offset = price8;
         }
         else {
             this.shapes.sphere.draw(context, program_state, item8_background_trans, this.materials.menubuttons);
         }
+        //draw money count
+        let dash_model = Mat4.identity().times(Mat4.translation(11.5,16.8,4,0)).times(Mat4.scale(1.3,1.3,0.2,5));
+        let point_string = this.sand_dollars;
+        this.shapes.text.set_string("$" + point_string.toString(), context.context);
+        this.shapes.text.draw(context, program_state, dash_model.times(Mat4.scale(.50, .50, .50)), this.materials.text_image);
+        
+        //draw lifes count
+        let lifes_model = Mat4.identity().times(Mat4.translation(-23.5,16.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+        let lifes_string = this.lifes;
+        this.shapes.text.set_string("lifes:" + lifes_string.toString(), context.context);
+        this.shapes.text.draw(context, program_state, lifes_model.times(Mat4.scale(.50, .50, .50)), this.materials.text_image);
+        
     }
 
     display(context, program_state) {                                 
@@ -944,9 +935,10 @@ export class Assignment2 extends Base_Scene {
 
         this.shapes.sand.draw(context, program_state, sand_transform, this.materials.sand);
 
-        // Draw menu bar 
-        this.draw_menu_bar(context, program_state, model_transform, t);
-        
+        // Draw menu bar if lifes are not 0
+        if(this.lifes != 0){
+            this.draw_menu_bar(context, program_state, model_transform, t);
+        }
         // If player has purchased decorations --> draw them here
         if (this.coral_queue.length > 0) {
             for (let i = 0; i < this.coral_queue.length; i++) {
@@ -1021,31 +1013,32 @@ export class Assignment2 extends Base_Scene {
 
 
         // Fill scene with fish & shark 
-        let left_fish_count = 5;
+        let left_fish_count = 1;
         let right_fish_count = 5;
-        let shark_left_count = 2;
-        let shark_right_count = 2;
+        let shark_left_count = this.left_shark_count;
+        let shark_right_count = this.right_shark_count;
         let fish_speed = 3;
-        let shark_speed = 3;
+        let shark_speed = 3 + (3 - this.lifes)*4;
         
         /*These for loops draw fishes and sharks and call collsion detection functions*/
-        for(let i = 0; i < left_fish_count; i++){
-            this.draw_fishes_left(context, program_state, model_transform, i, t, fish_speed);
-            this.detect_fish_collision_left(i, t, fish_speed);
-        }
-        for(let i = 0; i < right_fish_count; i++){
-            this.draw_fishes_right(context, program_state, model_transform, i, t, fish_speed);
-            this.detect_fish_collision_right(i, t, fish_speed);
-        }
-        for(let i = 0; i < shark_left_count; i++){
-            this.draw_shark_left(context, program_state, model_transform, i, t, shark_speed);
-            this.detect_shark_collision_left(i, t, shark_speed);
-        }
-        for(let i = 0; i < shark_right_count; i++){
-            this.draw_shark_right(context, program_state, model_transform, i, t, shark_speed);
-            this.detect_shark_collision_right(i, t, shark_speed);
-
-        }
+        if(this.lifes != 0){
+            for(let i = 0; i < left_fish_count; i++){
+                this.draw_fishes_left(context, program_state, model_transform, i, t, fish_speed);
+                this.detect_fish_collision_left(i, t, fish_speed);
+            }
+            for(let i = 0; i < right_fish_count; i++){
+                this.draw_fishes_right(context, program_state, model_transform, i, t, fish_speed);
+                this.detect_fish_collision_right(i, t, fish_speed);
+            }
+            for(let i = 0; i < shark_left_count; i++){
+                this.draw_shark_left(context, program_state, model_transform, i, t, shark_speed);
+                this.detect_shark_collision_left(i, t, shark_speed);
+            }
+            for(let i = 0; i < shark_right_count; i++){
+                this.draw_shark_right(context, program_state, model_transform, i, t, shark_speed);
+                this.detect_shark_collision_right(i, t, shark_speed);
+            }
+       }
 
 
         // X,Y for turtle position --> controlled by player using arrow keys 
@@ -1092,13 +1085,14 @@ export class Assignment2 extends Base_Scene {
                                                .times(Mat4.translation(1.9, -0.5, 0.1, 0))
                                                .times(this.turtle_rleg_global);
 
-        this.shapes.turtlebody.draw(context, program_state, turtle_body, this.materials.turtle);
-        this.shapes.fishbody.draw(context, program_state, turtle_head, this.materials.turtlelimbs);
-        this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, this.materials.turtlelimbs);
-        this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
-        this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
-        this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, this.materials.turtlelimbs);
-
+        if(this.lifes != 0){
+            this.shapes.turtlebody.draw(context, program_state, turtle_body, this.materials.turtle);
+            this.shapes.fishbody.draw(context, program_state, turtle_head, this.materials.turtlelimbs);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, this.materials.turtlelimbs);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, this.materials.turtlelimbs);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, this.materials.turtlelimbs);
+            this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, this.materials.turtlelimbs);
+        }
         const max_coral_angle = .01 * Math.PI;
         var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
 
@@ -1153,8 +1147,16 @@ export class Assignment2 extends Base_Scene {
 
 //         let coral1_transform = model_transform.times(Mat4.translation(-22,3.5,0,0));
 //         this.shapes.coral1.draw(context, program_state, coral1_transform, this.materials.coral1);
-       
-        
+        //game over message
+        if(this.lifes == 0){
+            let score_transform = Mat4.identity().times(Mat4.translation(-8.5,17.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+            let total_score = this.total_spent;
+            this.shapes.text.set_string("Total Spent:" + total_score.toString(), context.context);
+            this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
+            let game_over = score_transform.times(Mat4.translation(-1.5,1,1,0));
+            this.shapes.text.set_string("GAME OVER", context.context);
+            this.shapes.text.draw(context, program_state, game_over.times(Mat4.scale(.75, .75, .50)), this.materials.text_image);
+        }
     }
 
 }
