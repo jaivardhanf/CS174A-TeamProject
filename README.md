@@ -38,6 +38,7 @@ Our project is a one-player game situated in an aquarium, in which the player co
 - 
 
 **Contributors**
+
 Rachel Nguyen // rachelnguyn@gmail.com // rachnguyn // 205213689
 
 Kimberly Sung // wansung186@gmail.com // kimsung12 // 805089045
