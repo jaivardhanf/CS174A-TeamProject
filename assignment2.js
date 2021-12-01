@@ -17,7 +17,9 @@ class Base_Scene extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
         // start toggle
-        //this.starts = false; 
+        this.starts = false; 
+        // pause toggle
+        this.paused = false; 
 
         // Sounds
         this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
@@ -89,10 +91,8 @@ class Base_Scene extends Scene {
                 {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40"), smoothness: 64,
                 color_texture: new Texture("assets/sand3.png"),
                 light_depth_texture: null}),
-            /*shark: new Material(new Gouraud_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),*/
-            shark: new Material(textured,
-                {ambient: .4, diffusivity: .6, texture: new Texture("assets/shark skin.jpg")}),                
+            shark: new Material(new Gouraud_Shader(),
+                {ambient: .4, diffusivity: .6, color: hex_color("#BFD8E0")}),              
             eye: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#000000")}),
             turtle: new Material(new Gouraud_Shader(),
@@ -136,6 +136,8 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/start button.png")}),
             instructions: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions.png")}),
+            pause: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/pause.png")}),
         };
 
         /* Turtle coordinates */
@@ -381,50 +383,65 @@ export class Assignment2 extends Base_Scene {
         let shark_speed = 3 + (3 - this.lifes)*4;
 
         /*These for loops draw fishes and sharks and call collsion detection functions*/
-        /*if(this.lifes != 0){
-            for(let i = 0; i < left_fish_count; i++){
-                this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                this.detect_fish_collision_left(i, t/1000, fish_speed);
-            }
-            for(let i = 0; i < right_fish_count; i++){
-                this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                this.detect_fish_collision_right(i, t/1000, fish_speed);
-            }
-            for(let i = 0; i < shark_left_count; i++){
-                this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                this.detect_shark_collision_left(i, t/1000, shark_speed);
-            }
-            for(let i = 0; i < shark_right_count; i++){
-                this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                this.detect_shark_collision_right(i, t/1000, shark_speed);
-
-            }*/
-
          
             if(this.lifes != 0){
                 if(this.starts){
+
+                    for(let i = 0; i < left_fish_count; i++)
                     {
-                    for(let i = 0; i < left_fish_count; i++){
-                    this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                    this.detect_fish_collision_left(i, t/1000, fish_speed);
+                        this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                        if (this.paused){
+                            this.detect_fish_collision_left(i, t/1000, 0);
+                            this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(5.5, 5.5, 5.5)),this.materials.pause);                                           
+                        }
+                        else 
+                            this.detect_fish_collision_left(i, t/1000, fish_speed);
                     }
                     for(let i = 0; i < right_fish_count; i++){
-                    this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                    this.detect_fish_collision_right(i, t/1000, fish_speed);
+                        this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                        if (this.paused)
+                            this.detect_fish_collision_right(i, t/1000, 0);
+                        else
+                            this.detect_fish_collision_right(i, t/1000, fish_speed);
                     }
                     for(let i = 0; i < shark_left_count; i++){
-                    this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                    this.detect_shark_collision_left(i, t/1000, shark_speed);
+                        this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                        if (this.paused)
+                            this.detect_shark_collision_left(i, t/1000, 0);
+                        else
+                            this.detect_shark_collision_left(i, t/1000, shark_speed);
                     }
                     for(let i = 0; i < shark_right_count; i++){
-                    this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                    this.detect_shark_collision_right(i, t/1000, shark_speed);
+                        this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                        if (this.paused)
+                            this.detect_shark_collision_left(i, t/1000, 0);                        
+                        else
+                            this.detect_shark_collision_right(i, t/1000, shark_speed);
                     }   
-                }
-               
+                }               
             }
 
-        }
+                /*if(this.lifes != 0){
+                    if(this.starts){
+
+                        for(let i = 0; i < left_fish_count; i++){
+                        this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                        this.detect_fish_collision_left(i, t/1000, fish_speed);
+                        }
+                        for(let i = 0; i < right_fish_count; i++){
+                        this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                        this.detect_fish_collision_right(i, t/1000, fish_speed);
+                        }
+                        for(let i = 0; i < shark_left_count; i++){
+                        this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                        this.detect_shark_collision_left(i, t/1000, shark_speed);
+                        }
+                        for(let i = 0; i < shark_right_count; i++){
+                        this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                        this.detect_shark_collision_right(i, t/1000, shark_speed);
+                        }   
+                    }                
+                }*/
 
         // X,Y for turtle position --> controlled by player using arrow keys 
         var y = this.y_movement;
@@ -486,9 +503,7 @@ export class Assignment2 extends Base_Scene {
                 this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(16,10,-10,0)).times(Mat4.scale(5, 5, 5)),this.materials.enter);
                 this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(5.5, 5.5, 5.5)),this.materials.instructions);                
             }
-
-                      /// start buttons ////
-        //this.shapes.box.draw(context, program_state, model_transform.times(Mat4.scale(10, 10, 10)),this.materials.enter);
+            
         }
         const max_coral_angle = .01 * Math.PI;
         var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
@@ -586,7 +601,7 @@ export class Assignment2 extends Base_Scene {
             this.change_lighting_color = true; 
         });
 
-        this.key_triggered_button("Start Music/Game", ['0'], () => {
+        this.key_triggered_button("Start Music", ['0'], () => {
             // loop background audio
             if (typeof this.background_sound.loop == 'boolean')
             {
@@ -602,10 +617,13 @@ export class Assignment2 extends Base_Scene {
             this.background_sound.play(); 
         });
 
-        this.key_triggered_button("Stop Music/Pause Game", ['p'], () => {
+        this.key_triggered_button("Stop Music", ['s'], () => {
             // loop background audio
             this.background_sound.pause(); 
         });
+
+        // Pause Game (p key)
+        this.key_triggered_button("Pause", ['p'], () => {this.paused =! this.paused;});
 
     }
 
@@ -1260,9 +1278,6 @@ export class Assignment2 extends Base_Scene {
 
             this.init_ok = true;
         }
-
-         /// start buttons ////
-        //this.shapes.box.draw(context, program_state, model_transform.times(Mat4.scale(10, 10, 10)),this.materials.enter);
 
 
         // set lights
