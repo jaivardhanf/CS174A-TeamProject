@@ -1,7 +1,7 @@
 import {defs, tiny} from './examples/common.js';
 
 import {Transforms_Sandbox} from "./examples/transforms-sandbox.js"
-import {Assignment2} from "./assignment2.js"
+import {TurtleMania} from "./turtlemania.js"
 import {Scene_To_Texture_Demo} from "./examples/scene-to-texture-demo.js"
 import {Mouse_Demo} from "./examples/mouse-demo.js"
 
@@ -23,13 +23,13 @@ const {
 const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo;
 
 Object.assign(defs,
-            {Transforms_Sandbox}, {Assignment2}, {Scene_To_Texture_Demo}, {Mouse_Demo});
+            {Transforms_Sandbox}, {TurtleMania}, {Scene_To_Texture_Demo}, {Mouse_Demo});
 
 // ******************** End extra step
 
 // (Can define Main_Scene's class here)
 
-const Main_Scene = Assignment2;
+const Main_Scene = TurtleMania;
 const Additional_Scenes = [];
 
 export {Main_Scene, Additional_Scenes, Canvas_Widget, Code_Widget, Text_Widget, defs}

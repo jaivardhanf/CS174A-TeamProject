@@ -231,7 +231,7 @@ class Base_Scene extends Scene {
     }
 }
 
-export class Assignment2 extends Base_Scene {  
+export class TurtleMania extends Base_Scene {  
 
    texture_buffer_init(gl) {
         // Depth Texture
