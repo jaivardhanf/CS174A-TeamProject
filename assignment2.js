@@ -613,7 +613,7 @@ export class Assignment2 extends Base_Scene {
         const time_in_sec = t/1000; 
         let tip1time = 25;
         let tip1timeend = 35;
-        var tip_transform = Mat4.identity().times(Mat4.translation(8,13,0,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+        var tip_transform = Mat4.identity().times(Mat4.translation(6.5,12,3,0)).times(Mat4.scale(1.2,1.2,0.2,5));
 
         // tip 1: tell user that sharks spawn faster when a life is lost 
         if (time_in_sec > tip1time && time_in_sec < tip1time + 1){
