@@ -1,6 +1,4 @@
-# CS174A-TeamProject
-
-***Turtle Mania***
+# CS174A-TeamProject: Turtle Mania
 
 **Introduction**	
 
