@@ -421,27 +421,6 @@ export class Assignment2 extends Base_Scene {
                 }               
             }
 
-                /*if(this.lifes != 0){
-                    if(this.starts){
-
-                        for(let i = 0; i < left_fish_count; i++){
-                        this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                        this.detect_fish_collision_left(i, t/1000, fish_speed);
-                        }
-                        for(let i = 0; i < right_fish_count; i++){
-                        this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                        this.detect_fish_collision_right(i, t/1000, fish_speed);
-                        }
-                        for(let i = 0; i < shark_left_count; i++){
-                        this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                        this.detect_shark_collision_left(i, t/1000, shark_speed);
-                        }
-                        for(let i = 0; i < shark_right_count; i++){
-                        this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                        this.detect_shark_collision_right(i, t/1000, shark_speed);
-                        }   
-                    }                
-                }*/
 
         // X,Y for turtle position --> controlled by player using arrow keys 
         var y = this.y_movement;
