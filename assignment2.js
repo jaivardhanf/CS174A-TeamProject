@@ -611,62 +611,66 @@ export class Assignment2 extends Base_Scene {
 
         // draw tips at time intervals
         const time_in_sec = t/1000; 
-        let tip1time = 25;
-        let tip1timeend = 35;
+        let tip1time = 30;
+        let tip1timeend = 40;
         var tip_transform = Mat4.identity().times(Mat4.translation(6.5,12,3,0)).times(Mat4.scale(1.2,1.2,0.2,5));
 
-        // tip 1: tell user that sharks spawn faster when a life is lost 
-        if (time_in_sec > tip1time && time_in_sec < tip1time + 1){
-            this.bling_sound.play();
-        }
-        if (time_in_sec > tip1time && time_in_sec < tip1timeend) {
-            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip1);
-        }
-    
-        // tip 2: tell user they can pause game
-        let tip2time = 45;
-        let tip2timeend = 55;
+        if (this.starts){
+            
+            // tip 1: tell user that sharks spawn faster when a life is lost 
+            if (time_in_sec > tip1time && time_in_sec < tip1time + 1){
+                this.bling_sound.play();
+            }
+            if (time_in_sec > tip1time && time_in_sec < tip1timeend) {
+                this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip1);
+            }
 
-        if (time_in_sec > tip2time && time_in_sec < tip2time + 1){
-            this.bling_sound.play();
-        }
-        if (time_in_sec > tip2time && time_in_sec < tip2timeend) {
-            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip4);
-        }
+            // tip 2: tell user they can pause game
+            let tip2time = 50;
+            let tip2timeend = 60;
 
-        // tip 3: tell user they can stop music
-        let tip3time = 65;
-        let tip3timeend = 75;
+            if (time_in_sec > tip2time && time_in_sec < tip2time + 1){
+                this.bling_sound.play();
+            }
+            if (time_in_sec > tip2time && time_in_sec < tip2timeend) {
+                this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip4);
+            }
 
-        if (time_in_sec > tip3time && time_in_sec < tip3time + 1){
-            this.bling_sound.play();
-        }
-        if (time_in_sec > tip3time && time_in_sec < tip3timeend) {
-            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip3);
-        }
+            // tip 3: tell user they can stop music
+            let tip3time = 70;
+            let tip3timeend = 80;
 
-        // tip 4: tell user they can change aquarium lighting color 
-        let tip4time = 85;
-        let tip4timeend = 95;
+            if (time_in_sec > tip3time && time_in_sec < tip3time + 1){
+                this.bling_sound.play();
+            }
+            if (time_in_sec > tip3time && time_in_sec < tip3timeend) {
+                this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip3);
+            }
 
-        if (time_in_sec > tip4time && time_in_sec < tip4time + 1){
-            this.bling_sound.play();
-        }
-        if (time_in_sec > tip4time && time_in_sec < tip4timeend) {
-            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip2);
-        }
+            // tip 4: tell user they can change aquarium lighting color 
+            let tip4time = 90;
+            let tip4timeend = 100;
 
-        // tip 4: tell user they can change aquarium lighting color 
-        let tip5time = 105;
-        let tip5timeend = 115;
+            if (time_in_sec > tip4time && time_in_sec < tip4time + 1){
+                this.bling_sound.play();
+            }
+            if (time_in_sec > tip4time && time_in_sec < tip4timeend) {
+                this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip2);
+            }
 
-        if (time_in_sec > tip5time && time_in_sec < tip5time + 1){
-            this.bling_sound.play();
-        }
-        if (time_in_sec > tip5time && time_in_sec < tip5timeend) {
-            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip5);
-        }
+            // tip 4: tell user they can change aquarium lighting color 
+            let tip5time = 110;
+            let tip5timeend = 120;
 
+            if (time_in_sec > tip5time && time_in_sec < tip5time + 1){
+                this.bling_sound.play();
+            }
+            if (time_in_sec > tip5time && time_in_sec < tip5timeend) {
+                this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip5);
+            }
+
+        }
+       
         const max_coral_angle = .01 * Math.PI;
         var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
 
