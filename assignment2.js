@@ -142,9 +142,9 @@ class Base_Scene extends Scene {
             enter: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/start button.png")}),
             instructions: new Material(textured, 
-                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions8.png")}),
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions01.png")}),
             startbackground: new Material(textured, 
-                {ambient: 1, diffusivity: .9, specularity: 1, color: hex_color("#000000"), texture: new Texture("assets/startbackground.png")}),
+                {ambient: 1, diffusivity: .9, specularity: 1, color: hex_color("#000000"), texture: new Texture("assets/sb2.png")}),
              loading: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/loading.gif")}),
             pause: new Material(textured, 
@@ -161,6 +161,16 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip5.png")}),
             sanddollar: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/sanddollar.png")}),
+            heart: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/heart2.png")}),
+            gameoverpic: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/gameover1.png")}),
+            totalspent: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/totalspent1.png")}),
+            takepix: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/takephoto.png")}),
+            livestext: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/lives3.png")}),
         };
 
         /* Turtle coordinates */
@@ -603,7 +613,7 @@ export class Assignment2 extends Base_Scene {
 
                 // draw start screen (background + menu/instructions) 
                 this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
-                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
+                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
                 
             }
             
@@ -720,19 +730,22 @@ export class Assignment2 extends Base_Scene {
         this.shapes.snail.draw(context, program_state, snail_transform, shadow_pass? this.materials.snail : this.pure);
 
         if(this.lifes == 0){
-            let score_transform = Mat4.identity().times(Mat4.translation(-8.5,17.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+            let score_transform = Mat4.identity().times(Mat4.translation(7.5,18.5,4)).times(Mat4.scale(1.2,1.2,0.2,5));
             let total_score = this.total_spent;
-            this.shapes.text.set_string("Total Spent:" + total_score.toString(), context.context);
-            this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
-            let game_over = score_transform.times(Mat4.translation(-1.5,1,1,0));
-            this.shapes.text.set_string("GAME OVER", context.context);
-            this.shapes.text.draw(context, program_state, game_over.times(Mat4.scale(.75, .75, .50)), this.materials.text_image);
-            let take_pix1 = score_transform.times(Mat4.translation(-12,1.5,1,0));
-            this.shapes.text.set_string("Don't forget to take a picture", context.context);
-            this.shapes.text.draw(context, program_state, take_pix1.times(Mat4.scale(.2, .2, .50)), this.materials.text_image);
-            let take_pix2 = take_pix1.times(Mat4.translation(2,-1,1,0));
-            this.shapes.text.set_string("of your aquarium!", context.context);
-            this.shapes.text.draw(context, program_state, take_pix2.times(Mat4.scale(.2, .2, .50)), this.materials.text_image);
+            this.shapes.text.set_string(total_score.toString(), context.context);
+            this.shapes.square.draw(context, program_state, score_transform.times(Mat4.scale(2.5, 2.5, .50)), this.materials.totalspent);
+            score_transform = score_transform.times(Mat4.translation(2.5,0,0))
+            this.shapes.square.draw(context, program_state, score_transform.times(Mat4.scale(.50, .50, .50)), this.materials.sanddollar);
+            score_transform = score_transform.times(Mat4.translation(1.2,0,0));
+            this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(0.7, 0.7, .50)), this.materials.text_image);
+
+            let game_over = Mat4.identity().times(Mat4.translation(-8.5,16,4,0))
+                                           .times(Mat4.scale(1.2,1.2,0.2,5))
+                                           .times(Mat4.translation(3,-2,1,0));
+            this.shapes.square.draw(context, program_state, game_over.times(Mat4.scale(7, 7, 1)), this.materials.gameoverpic);
+            let take_pix1 = Mat4.identity().times(Mat4.translation(-19,17.5,4)).times(Mat4.scale(1.2,1.2,0.2,5));
+            this.shapes.square.draw(context, program_state, take_pix1.times(Mat4.scale(3.5, 3.5, .50)), this.materials.takepix);
+            // this.shapes.text.draw(context, program_state, take_pix2.times(Mat4.scale(.2, .2, .50)), this.materials.text_image);
         }
 
     }
@@ -787,7 +800,9 @@ export class Assignment2 extends Base_Scene {
             this.background_sound.pause(); 
         });
         // Pause Game (p key)
-        this.key_triggered_button("Pause", ['p'], () => {this.paused =! this.paused;});
+        this.key_triggered_button("Pause", ['p'], () => {
+            this.paused =! this.paused;
+        });
 
     }
 
@@ -1428,10 +1443,19 @@ export class Assignment2 extends Base_Scene {
 
         
         // draw lifes count
-        let lifes_model = Mat4.identity().times(Mat4.translation(-23.5,16.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+        let lifes_model = Mat4.identity().times(Mat4.translation(-21.5,16,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
         let lifes_string = this.lifes;
-        this.shapes.text.set_string("lives:" + lifes_string.toString(), context.context);
-        this.shapes.text.draw(context, program_state, lifes_model.times(Mat4.scale(.50, .50, .50)), this.materials.text_image);
+        this.shapes.text.set_string("lives:", context.context);
+        this.shapes.square.draw(context, program_state, lifes_model.times(Mat4.scale(2, 2, .50)), this.materials.livestext);
+        for (var i = 0; i < this.lifes; i++){
+            if (i == 0){
+                var heart_model = lifes_model.times(Mat4.translation(2.7, 0.55, 0));
+            }
+            else{
+                var heart_model = lifes_model.times(Mat4.translation(i*1.5+2.7, 0.55, 0));
+            }
+            this.shapes.square.draw(context, program_state, heart_model.times(Mat4.scale(0.7, 0.7, 1)), this.materials.heart);
+        }
         
     }
 
