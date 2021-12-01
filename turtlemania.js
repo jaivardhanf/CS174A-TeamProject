@@ -336,7 +336,7 @@ export class TurtleMania extends Base_Scene {
         // If player has purchased decorations --> draw them here
         if (this.coral_queue.length > 0) {
             for (let i = 0; i < this.coral_queue.length; i++) {
-                let dt = t/1000;
+                let ts = t/1000;
                 let obj = this.coral_queue[i];
                 let position = obj.pos;
                 let size = obj.size;
@@ -347,7 +347,7 @@ export class TurtleMania extends Base_Scene {
  
                 // If coral --> add sway effect 
                 var coral_angle = .01 * Math.PI;
-                var coral_sway = ((coral_angle/2) + (coral_angle/2) * (Math.sin(Math.PI*(dt*1.2))));
+                var coral_sway = ((coral_angle/2) + (coral_angle/2) * (Math.sin(Math.PI*(ts*1.2))));
 
                 if (obj.object == "coral1") {
                     transform = transform.times(Mat4.rotation(coral_sway, 0,0,1))
@@ -369,7 +369,7 @@ export class TurtleMania extends Base_Scene {
                     this.shapes.rock.draw(context, program_state, transform,shadow_pass? this.materials.rock : this.pure);
                 }
                 if (obj.object == "squid") {                
-                    let squid_movement = negorpos * (Math.sin(Math.PI * dt/4));    
+                    let squid_movement = negorpos * (Math.sin(Math.PI * ts/4));    
                     transform = transform.times(Mat4.scale(2,1.5,2,0))
                                          .times(Mat4.translation(0,squid_movement,0))
                                          .times(Mat4.rotation(squid_movement,0,1,0))
@@ -387,9 +387,9 @@ export class TurtleMania extends Base_Scene {
                 }
                 if (obj.object == "jellyfish") {
                     // animate jellyfish movement
-                    let jelly_movement = negorpos * (Math.sin(Math.PI * dt/4));
+                    let jelly_movement = negorpos * (Math.sin(Math.PI * ts/4));
                     let max_angle = .07 * Math.PI;
-                    let jelly_stretch = (1 + (max_angle/2) * (Math.sin(Math.PI*(dt/1.2))));
+                    let jelly_stretch = (1 + (max_angle/2) * (Math.sin(Math.PI*(ts/1.2))));
                     transform = transform.times(Mat4.rotation(-33,1,0,0))
                                          .times(Mat4.rotation(-66,0,1,0))
                                          .times(Mat4.translation(0,0,jelly_movement,0))
@@ -682,7 +682,7 @@ export class TurtleMania extends Base_Scene {
         }
        
         const max_coral_angle = .01 * Math.PI;
-        var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+        var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t/1000*1.2))));
 
 
         
