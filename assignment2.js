@@ -22,8 +22,14 @@ class Base_Scene extends Scene {
         this.paused = false; 
 
         // Sounds
-        this.background_sound = new Audio("assets/backgroundmusic.mp3"); 
+        this.background_sound = new Audio("assets/naruto.mp3");
+        this.click_sound = new Audio("assets/click.mp3");  
         this.munch_sound = new Audio("assets/munch.mp3"); 
+        this.shark_sound = new Audio("assets/sharkbite.mp3"); 
+        this.bling_sound = new Audio("assets/bling.mp3"); 
+        this.loading_sound = new Audio("assets/backgroundmusic.mp3");
+        this.gameover_sound = new Audio("assets/gameover.mp3"); 
+
         
         // Lighting 
         this.change_lighting_color = false;
@@ -136,13 +142,25 @@ class Base_Scene extends Scene {
             enter: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/start button.png")}),
             instructions: new Material(textured, 
-                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions6.png")}),
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions8.png")}),
             startbackground: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, color: hex_color("#000000"), texture: new Texture("assets/startbackground.png")}),
              loading: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/loading.gif")}),
             pause: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/pause.png")}),
+            tip1: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip1.png")}),
+            tip2: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip2.png")}),
+            tip3: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip3.png")}),
+            tip4: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip4.png")}),
+            tip5: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip5.png")}),
+            sanddollar: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/sanddollar.png")}),
         };
 
         /* Turtle coordinates */
@@ -475,6 +493,7 @@ export class Assignment2 extends Base_Scene {
          
             if(this.starts)  
             {
+                this.loading_sound.pause();
                 this.shapes.turtlebody.draw(context, program_state, turtle_body, shadow_pass? this.materials.turtle : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_head, shadow_pass? this.materials.turtlelimbs : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
@@ -488,15 +507,15 @@ export class Assignment2 extends Base_Scene {
                 const time_in_sec = t/1000; 
                 const time_loading_screen = 0;
                 const time_loading_screen_end = 9;
+              
 
                 if (time_in_sec > time_loading_screen && time_in_sec < time_loading_screen_end) {
+                    this.loading_sound.play();
                     this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(15, 10, 1)),this.materials.eye);   
 
-                    let score_transform = Mat4.identity().times(Mat4.translation(-7.5,13,11,0)).times(Mat4.scale(1.2,1.2,0.2,5));
-                    let total_score = this.total_spent;
+                    let loading_transform = Mat4.identity().times(Mat4.translation(-7.5,13,11,0)).times(Mat4.scale(1.2,1.2,0.2,5));
                     this.shapes.text.set_string("loading...", context.context);
-                    this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
-
+                    this.shapes.text.draw(context, program_state, loading_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
 
                     let max_angle = .1 * Math.PI;
                     let tail_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t/1000*4))));
@@ -568,7 +587,6 @@ export class Assignment2 extends Base_Scene {
                     const time_fish5 = 7;
 
                     if (time_in_sec > time_fish5) {
-
                         let fish5_trans = model_transform.times(Mat4.translation(5.0, 10, 11))
                                                      .times(Mat4.scale(0.8,0.6,0.5,1));
 
@@ -583,14 +601,72 @@ export class Assignment2 extends Base_Scene {
 
                 }
 
-                // draw start screen
+                // draw start screen (background + menu/instructions) 
                 this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
-
                 this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
                 
             }
             
         }
+
+        // draw tips at time intervals
+        const time_in_sec = t/1000; 
+        let tip1time = 25;
+        let tip1timeend = 35;
+        var tip_transform = Mat4.identity().times(Mat4.translation(8,13,0,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+
+        // tip 1: tell user that sharks spawn faster when a life is lost 
+        if (time_in_sec > tip1time && time_in_sec < tip1time + 1){
+            this.bling_sound.play();
+        }
+        if (time_in_sec > tip1time && time_in_sec < tip1timeend) {
+            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip1);
+        }
+    
+        // tip 2: tell user they can pause game
+        let tip2time = 45;
+        let tip2timeend = 55;
+
+        if (time_in_sec > tip2time && time_in_sec < tip2time + 1){
+            this.bling_sound.play();
+        }
+        if (time_in_sec > tip2time && time_in_sec < tip2timeend) {
+            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip4);
+        }
+
+        // tip 3: tell user they can stop music
+        let tip3time = 65;
+        let tip3timeend = 75;
+
+        if (time_in_sec > tip3time && time_in_sec < tip3time + 1){
+            this.bling_sound.play();
+        }
+        if (time_in_sec > tip3time && time_in_sec < tip3timeend) {
+            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip3);
+        }
+
+        // tip 4: tell user they can change aquarium lighting color 
+        let tip4time = 85;
+        let tip4timeend = 95;
+
+        if (time_in_sec > tip4time && time_in_sec < tip4time + 1){
+            this.bling_sound.play();
+        }
+        if (time_in_sec > tip4time && time_in_sec < tip4timeend) {
+            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip2);
+        }
+
+        // tip 4: tell user they can change aquarium lighting color 
+        let tip5time = 105;
+        let tip5timeend = 115;
+
+        if (time_in_sec > tip5time && time_in_sec < tip5time + 1){
+            this.bling_sound.play();
+        }
+        if (time_in_sec > tip5time && time_in_sec < tip5timeend) {
+            this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip5);
+        }
+
         const max_coral_angle = .01 * Math.PI;
         var coral_sway = ((max_coral_angle/2) + (max_coral_angle/2) * (Math.sin(Math.PI*(t*1.2))));
 
@@ -973,17 +1049,19 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075))
+        {
+            this.shark_sound.play();
 
-        for(let i = 0; i < this.left_shark_count; i++){        let shark_speed = 3 + (3 - this.lifes)*4;
-            this.new_shark_cord_left(i, t);
-        }
-        for(let i = 0; i < this.right_shark_count; i++){
-            this.new_shark_cord_right(i, t);
-        }
+            for(let i = 0; i < this.left_shark_count; i++){        
+                this.new_shark_cord_left(i, t);
+            }
+            for(let i = 0; i < this.right_shark_count; i++){
+                this.new_shark_cord_right(i, t);
+            }
 
-        // this.new_shark_cord_left(shark_count);
-        this.lifes = this.lifes - 1;
+            // this.new_shark_cord_left(shark_count);
+            this.lifes = this.lifes - 1;
         }
     }
 
@@ -996,17 +1074,20 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075))
+        {
 
-        for(let i = 0; i < this.left_shark_count; i++){
-            this.new_shark_cord_left(i, t);
-        }
-        for(let i = 0; i < this.right_shark_count; i++){
-            this.new_shark_cord_right(i, t);
-        }
+            this.shark_sound.play();
 
-        // this.new_shark_cord_right(shark_count);
-        this.lifes = this.lifes - 1;
+            for(let i = 0; i < this.left_shark_count; i++){
+                this.new_shark_cord_left(i, t);
+            }
+            for(let i = 0; i < this.right_shark_count; i++){
+                this.new_shark_cord_right(i, t);
+            }
+
+            // this.new_shark_cord_right(shark_count);
+            this.lifes = this.lifes - 1;
 
         }
     }
@@ -1334,10 +1415,13 @@ export class Assignment2 extends Base_Scene {
         }
 
         // draw money count
-        let dash_model = Mat4.identity().times(Mat4.translation(11.5,16.8,4,0)).times(Mat4.scale(1.3,1.3,0.2,5));
+        let dash_model = Mat4.identity().times(Mat4.translation(11.2,16.8,4,0)).times(Mat4.scale(1.3,1.3,0.2,5));
         let point_string = this.sand_dollars;
-        this.shapes.text.set_string("$" + point_string.toString(), context.context);
+        this.shapes.text.set_string(point_string.toString(), context.context);
+        this.shapes.square.draw(context, program_state, dash_model.times(Mat4.scale(.50, .50, .50)), this.materials.sanddollar);
+        dash_model = dash_model.times(Mat4.translation(1,-0.09,0));
         this.shapes.text.draw(context, program_state, dash_model.times(Mat4.scale(.50, .50, .50)), this.materials.text_image);
+
         
         // draw lifes count
         let lifes_model = Mat4.identity().times(Mat4.translation(-23.5,16.8,4,0)).times(Mat4.scale(1.2,1.2,0.2,5));
@@ -1429,6 +1513,7 @@ export class Assignment2 extends Base_Scene {
             const rect = canvas.getBoundingClientRect()
             this.mousex = mouse_position(e)[0];
             this.mousey = mouse_position(e)[1];
+            this.click_sound.play();
             this.mouse_draw_obj(context, program_state);
             });
                 
