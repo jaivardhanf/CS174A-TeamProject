@@ -45,6 +45,7 @@ class Base_Scene extends Scene {
         this.shapes = {
             box: new defs.Cube(),
             sphere: new defs.Subdivision_Sphere(4),
+            circle: new defs.Regular_2D_Polygon(50,50),
             square: new defs.Square(),
             fishbody: new defs.Subdivision_Sphere(4),
             turtlebody: new defs.Subdivision_Sphere(2),
@@ -135,7 +136,11 @@ class Base_Scene extends Scene {
             enter: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/start button.png")}),
             instructions: new Material(textured, 
-                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions.png")}),
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/instructions6.png")}),
+            startbackground: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, color: hex_color("#000000"), texture: new Texture("assets/startbackground.png")}),
+             loading: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/loading.gif")}),
             pause: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/pause.png")}),
         };
@@ -384,49 +389,49 @@ export class Assignment2 extends Base_Scene {
 
         /*These for loops draw fishes and sharks and call collsion detection functions*/
          
-            if(this.lifes != 0){
-                if(this.starts){
+        if(this.lifes != 0){
+            if(this.starts){
 
-                    for(let i = 0; i < left_fish_count; i++)
-                    {
-                        this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                        if (this.paused){
-                            this.detect_fish_collision_left(i, t/1000, 0);
-                            this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(5.5, 5.5, 5.5)),this.materials.pause);                                           
-                        }
-                        else 
-                            this.detect_fish_collision_left(i, t/1000, fish_speed);
+                for(let i = 0; i < left_fish_count; i++)
+                {
+                    this.draw_fishes_left(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                    if (this.paused){
+                        this.detect_fish_collision_left(i, t/1000, 0);
+                        this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(5.5, 5.5, 5.5)),this.materials.pause);                                           
                     }
-                    for(let i = 0; i < right_fish_count; i++){
-                        this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
-                        if (this.paused)
-                            this.detect_fish_collision_right(i, t/1000, 0);
-                        else
-                            this.detect_fish_collision_right(i, t/1000, fish_speed);
-                    }
-                    for(let i = 0; i < shark_left_count; i++){
-                        this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                        if (this.paused)
-                            this.detect_shark_collision_left(i, t/1000, 0);
-                        else
-                            this.detect_shark_collision_left(i, t/1000, shark_speed);
-                    }
-                    for(let i = 0; i < shark_right_count; i++){
-                        this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
-                        if (this.paused)
-                            this.detect_shark_collision_left(i, t/1000, 0);                        
-                        else
-                            this.detect_shark_collision_right(i, t/1000, shark_speed);
-                    }   
-                }               
-            }
+                    else 
+                        this.detect_fish_collision_left(i, t/1000, fish_speed);
+                }
+                for(let i = 0; i < right_fish_count; i++){
+                    this.draw_fishes_right(context, program_state, model_transform, i, t/1000, fish_speed, shadow_pass);
+                    if (this.paused)
+                        this.detect_fish_collision_right(i, t/1000, 0);
+                    else
+                        this.detect_fish_collision_right(i, t/1000, fish_speed);
+                }
+                for(let i = 0; i < shark_left_count; i++){
+                    this.draw_shark_left(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                    if (this.paused)
+                        this.detect_shark_collision_left(i, t/1000, 0);
+                    else
+                        this.detect_shark_collision_left(i, t/1000, shark_speed);
+                }
+                for(let i = 0; i < shark_right_count; i++){
+                    this.draw_shark_right(context, program_state, model_transform, i, t/1000, shark_speed, shadow_pass);
+                    if (this.paused)
+                        this.detect_shark_collision_left(i, t/1000, 0);                        
+                    else
+                        this.detect_shark_collision_right(i, t/1000, shark_speed);
+                }   
+            }               
+        }
 
 
         // X,Y for turtle position --> controlled by player using arrow keys 
         var y = this.y_movement;
         var x = this.x_movement;
         let max_flipper_angle = .05 * Math.PI;
-        let flipper_rot = ((max_flipper_angle/2) + (max_flipper_angle/2) * (Math.sin(Math.PI*(t*1.2))));
+        let flipper_rot = ((max_flipper_angle/2) + (max_flipper_angle/2) * (Math.sin(Math.PI*(t/1000*1.2))));
 
         //Draws turtle after drawing sharks and fishes
         var turtle_body = model_transform.times(Mat4.scale(1.5,1.8,1,0))
@@ -479,8 +484,110 @@ export class Assignment2 extends Base_Scene {
             }    
           else
             {   
-                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(16,10,-10,0)).times(Mat4.scale(5, 5, 5)),this.materials.enter);
-                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(5.5, 5.5, 5.5)),this.materials.instructions);                
+                // draw loading screen
+                const time_in_sec = t/1000; 
+                const time_loading_screen = 0;
+                const time_loading_screen_end = 9;
+
+                if (time_in_sec > time_loading_screen && time_in_sec < time_loading_screen_end) {
+                    this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(15, 10, 1)),this.materials.eye);   
+
+                    let score_transform = Mat4.identity().times(Mat4.translation(-7.5,13,11,0)).times(Mat4.scale(1.2,1.2,0.2,5));
+                    let total_score = this.total_spent;
+                    this.shapes.text.set_string("loading...", context.context);
+                    this.shapes.text.draw(context, program_state, score_transform.times(Mat4.scale(.35, .35, .50)), this.materials.text_image);
+
+
+                    let max_angle = .1 * Math.PI;
+                    let tail_rot = ((max_angle/2) + (max_angle/2) * (Math.sin(Math.PI*(t/1000*4))));
+
+                    const time_in_sec = t/1000; 
+                    const time_fish1 = 3;
+
+                    if (time_in_sec > time_fish1) {
+                        let fish1_trans = model_transform.times(Mat4.translation(-15, 10, 11))
+                                                  .times(Mat4.scale(0.8,0.6,0.5,1));
+
+                        this.shapes.fishbody.draw(context, program_state, fish1_trans, shadow_pass? this.materials.guppies.override({color: hex_color("#eb2667")}) : this.pure);
+
+                        let tail1_trans = model_transform.times(Mat4.translation(-15.5, 10, 11))
+                                                 .times(Mat4.scale(1,1,1,1))
+                                                 .times(Mat4.rotation(-73,0,0,1))
+                                                 .times(Mat4.rotation(tail_rot,0,1,0));
+                        this.shapes.tail.draw(context, program_state, tail1_trans, shadow_pass? this.materials.tails.override({color: hex_color("#eb2667")}) : this.pure);  
+                    }
+
+                    const time_fish2 = 4;
+
+                    if (time_in_sec > time_fish2) {
+                        let fish2_trans = model_transform.times(Mat4.translation(-10, 10, 11))
+                                                      .times(Mat4.scale(0.8,0.6,0.5,1));
+
+                        this.shapes.fishbody.draw(context, program_state, fish2_trans, shadow_pass? this.materials.guppies.override({color: hex_color("#ff8921")}) : this.pure);
+
+                        let tail2_trans = model_transform.times(Mat4.translation(-10.5, 10, 11))
+                                                     .times(Mat4.scale(1,1,1,1))
+                                                     .times(Mat4.rotation(-73,0,0,1))
+                                                     .times(Mat4.rotation(tail_rot,0,1,0));
+                        this.shapes.tail.draw(context, program_state, tail2_trans, shadow_pass? this.materials.tails.override({color: hex_color("#ff8921")}) : this.pure);  
+                    }
+
+                    const time_fish3 = 5;
+
+                    if (time_in_sec > time_fish3) {
+
+                        let fish3_trans = model_transform.times(Mat4.translation(-5, 10, 11))
+                                                      .times(Mat4.scale(0.8,0.6,0.5,1));
+
+                        this.shapes.fishbody.draw(context, program_state, fish3_trans, shadow_pass? this.materials.guppies.override({color: hex_color("#b2fc81")}) : this.pure);
+
+                        let tail3_trans = model_transform.times(Mat4.translation(-5.5, 10, 11))
+                                                     .times(Mat4.scale(1,1,1,1))
+                                                     .times(Mat4.rotation(-73,0,0,1))
+                                                     .times(Mat4.rotation(tail_rot,0,1,0));
+                        this.shapes.tail.draw(context, program_state, tail3_trans, shadow_pass? this.materials.tails.override({color: hex_color("#b2fc81")}) : this.pure);         
+                    }
+
+                    const time_fish4 = 6;
+
+                    if (time_in_sec > time_fish4) {
+
+                        let fish4_trans = model_transform.times(Mat4.translation(0, 10, 11))
+                                                      .times(Mat4.scale(0.8,0.6,0.5,1));
+
+                        this.shapes.fishbody.draw(context, program_state, fish4_trans, shadow_pass? this.materials.guppies.override({color: hex_color("#70aad4")}) : this.pure);
+
+                        let tail4_trans = model_transform.times(Mat4.translation(-.5, 10, 11))
+                                                     .times(Mat4.scale(1,1,1,1))
+                                                     .times(Mat4.rotation(-73,0,0,1))
+                                                     .times(Mat4.rotation(tail_rot,0,1,0));
+                        this.shapes.tail.draw(context, program_state, tail4_trans, shadow_pass? this.materials.tails.override({color: hex_color("#70aad4")}) : this.pure);         
+
+                    }
+
+                    const time_fish5 = 7;
+
+                    if (time_in_sec > time_fish5) {
+
+                        let fish5_trans = model_transform.times(Mat4.translation(5.0, 10, 11))
+                                                     .times(Mat4.scale(0.8,0.6,0.5,1));
+
+                        this.shapes.fishbody.draw(context, program_state, fish5_trans, shadow_pass? this.materials.guppies.override({color: hex_color("#956cbd")}) : this.pure);
+
+                        let tail5_trans = model_transform.times(Mat4.translation(4.5, 10, 11))
+                                                     .times(Mat4.scale(1,1,1,1))
+                                                     .times(Mat4.rotation(-73,0,0,1))
+                                                     .times(Mat4.rotation(tail_rot,0,1,0));
+                        this.shapes.tail.draw(context, program_state, tail5_trans, shadow_pass? this.materials.tails.override({color: hex_color("#956cbd")}) : this.pure);                  
+                    }
+
+                }
+
+                // draw start screen
+                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
+
+                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,10,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
+                
             }
             
         }
@@ -554,7 +661,23 @@ export class Assignment2 extends Base_Scene {
     make_control_panel() {
 
         // Start Game (enter key)
-        this.key_triggered_button("Start", ['Enter'], () => {this.starts =! this.starts;});
+        this.key_triggered_button("Start", ['Enter'], () => {
+            this.starts =! this.starts;
+
+            // loop background audio
+            if (typeof this.background_sound.loop == 'boolean')
+            {
+                this.background_sound.loop = true;
+            }
+            else
+            {
+                this.background_sound.addEventListener('ended', function() {
+                    this.currentTime = 0;
+                    this.play();
+                }, false);
+            }
+            this.background_sound.play(); 
+        });
 
         // Up Movement (arrow key up)
         this.key_triggered_button("Up", ['ArrowUp'], () => {
@@ -579,28 +702,10 @@ export class Assignment2 extends Base_Scene {
         this.key_triggered_button("Change Lighting Color", ['c'], () => {
             this.change_lighting_color = true; 
         });
-
-        this.key_triggered_button("Start Music", ['0'], () => {
-            // loop background audio
-            if (typeof this.background_sound.loop == 'boolean')
-            {
-                this.background_sound.loop = true;
-            }
-            else
-            {
-                this.background_sound.addEventListener('ended', function() {
-                    this.currentTime = 0;
-                    this.play();
-                }, false);
-            }
-            this.background_sound.play(); 
-        });
-
         this.key_triggered_button("Stop Music", ['s'], () => {
             // loop background audio
             this.background_sound.pause(); 
         });
-
         // Pause Game (p key)
         this.key_triggered_button("Pause", ['p'], () => {this.paused =! this.paused;});
 
@@ -891,7 +996,7 @@ export class Assignment2 extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.45) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.65)){
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075)){
 
         for(let i = 0; i < this.left_shark_count; i++){
             this.new_shark_cord_left(i, t);
