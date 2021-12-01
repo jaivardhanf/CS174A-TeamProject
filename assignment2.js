@@ -636,7 +636,7 @@ export class Assignment2 extends Base_Scene {
         let snail_transform = model_transform.times(Mat4.translation(-28,-1,-1,0))    
                                              .times(Mat4.rotation(-33,1,0,0))
                                              .times(Mat4.rotation(33,0,0,1))
-                                             .times(Mat4.translation(0,-t/8,0,0))
+                                             .times(Mat4.translation(0,-t/1000/8,0,0))
         this.shapes.snail.draw(context, program_state, snail_transform, shadow_pass? this.materials.snail : this.pure);
 
         if(this.lifes == 0){
