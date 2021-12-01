@@ -148,7 +148,7 @@ class Base_Scene extends Scene {
              loading: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/loading.gif")}),
             pause: new Material(textured, 
-                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/pause.png")}),
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/PAUSED.png")}),
             tip1: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip1.png")}),
             tip2: new Material(textured, 
