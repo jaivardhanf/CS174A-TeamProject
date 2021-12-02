@@ -17,7 +17,7 @@ class Base_Scene extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
         // start toggle
-        this.starts = false; 
+        this.startgame = false; 
         // pause toggle
         this.paused = false; 
 
@@ -29,6 +29,7 @@ class Base_Scene extends Scene {
         this.bling_sound = new Audio("assets/bling.mp3"); 
         this.loading_sound = new Audio("assets/backgroundmusic.mp3");
         this.gameover_sound = new Audio("assets/gameover.mp3"); 
+        this.talking_sound = new Audio("assets/talking.mp3"); 
 
         
         // Lighting 
@@ -484,7 +485,7 @@ export class TurtleMania extends Base_Scene {
         /*These for loops draw fishes and sharks and call collsion detection functions*/
          
         if(this.lifes != 0){
-            if(this.starts){
+            if(this.startgame){
 
                 for(let i = 0; i < left_fish_count; i++)
                 {
@@ -567,18 +568,15 @@ export class TurtleMania extends Base_Scene {
 
         if(this.lifes != 0){
          
-            if(this.starts)  
-            {
-                this.loading_sound.pause();
                 this.shapes.turtlebody.draw(context, program_state, turtle_body, shadow_pass? this.materials.turtle : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_head, shadow_pass? this.materials.turtlelimbs : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_tl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_bl_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, shadow_pass? this.materials.turtlelimbs : this.pure);                
-            }    
-          else
-            {   
+     
+        if (!this.startgame){
+
                 // draw loading screen
                 const time_in_sec = t/1000; 
                 const time_loading_screen = 0;
@@ -674,24 +672,117 @@ export class TurtleMania extends Base_Scene {
                                                      .times(Mat4.rotation(tail_rot,0,1,0));
                         this.shapes.tail.draw(context, program_state, tail5_trans, shadow_pass? this.materials.tails.override({color: hex_color("#956cbd")}) : this.pure);                  
                     }
-
                 }
 
-                // draw start screen (background + menu/instructions) 
-                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
-                this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
-                
-            }
-            
+                        let zoominturtle = 9;
+                        let zoominturtlenend = 14;
+
+                        if (time_in_sec > zoominturtle && time_in_sec < zoominturtlenend){
+                                let newcam = Mat4.translation(-6,-5,7);
+                                program_state.set_camera(newcam);
+                                program_state.set_camera(newcam.times(Mat4.translation(t/300, t/600, -t/70))
+                                .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0)).map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
+
+        //                     program_state.camera_inverse = Mat4.translation(0, -2, -t/1000)
+        //                      .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0))
+        //                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+                        }
+                        let talking_scene = 13.98;
+                        let talking_scene_end = 28.5;
+
+                        if (time_in_sec > talking_scene && time_in_sec < talking_scene_end){
+                            this.talking_sound.play();
+                        }
+
+                        let scene2 = 13.98;
+                        let scene2end = 15.5;
+                        if (time_in_sec > scene2 && time_in_sec < scene2end){
+                            let text1_trans = Mat4.translation(-3, 5, 0).times(Mat4.scale(0.7,0.7,1));
+                            this.shapes.text.set_string("Hello!", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                        }
+
+                        let scene3 = 15.5;
+                        let scene3end = 19.5;
+                        if (time_in_sec > scene3 && time_in_sec < scene3end){
+                            let text1_trans = Mat4.translation(-4, 6, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("I'm Turtle, and", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                            let text2_trans = Mat4.translation(-4, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("this is my home!", context.context);
+                            this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
+                        }
+                        let scene4 = 19.5;
+                        let scene4end = 23.5;
+                        if (time_in_sec > scene4 && time_in_sec < scene4end){
+                            let text1_trans = Mat4.translation(-5, 6, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("Recently, sharks have ", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                            let text2_trans = Mat4.translation(-4.5, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("invaded the area!", context.context);
+                            this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
+                        }
+                        let scene5 = 23.5;
+                        let scene5end = 31;
+                        if (time_in_sec > scene5 && time_in_sec < scene5end){
+                            let text1_trans = Mat4.translation(-6, 6.5, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("Please help me gain energy", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                            let text2_trans = Mat4.translation(-5.5, 5.7, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("back so I can call this", context.context);
+                            this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
+                            let text3_trans = Mat4.translation(-4.8, 4.9, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("place my home again!", context.context);
+                            this.shapes.text.draw(context, program_state, text3_trans, this.materials.text_image);
+                        }
+
+                        if (time_in_sec > talking_scene_end){
+                                this.talking_sound.pause();
+                        }
+
+
+                        let introsceenend = 31;
+                        let introsceenendend = 32.5;  
+                        if (time_in_sec > introsceenend && time_in_sec < introsceenendend){
+                            program_state.camera_inverse = this.initial_camera_position
+                            .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+                        }
+
+                        let startscreen = 31;
+                        if (time_in_sec > startscreen){
+                        // draw start screen (background + menu/instructions) 
+                            this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
+                            this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
+                        }
+
+                    }
+
+                          
+         }
+
+        if (this.startgame){
+            this.loading_sound.pause();
+            this.talking_sound.pause();
+
+            program_state.camera_inverse = this.initial_camera_position
+                    .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
+                
+                //}
+//                 if (scenetime > rotateturtle && scenetime < rotateturtleend){
+//                     program_state.camera_inverse = turtle_body.times(Mat4.translation(0, -2, -20))
+//                     .times(Mat4.rotation(Math.cos(t/1000), 0, 1, 0))
+//                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+//                 }
+                
 
         // draw tips at time intervals
         const time_in_sec = t/1000; 
-        let tip1time = 30;
-        let tip1timeend = 40;
+        let tip1time = 50;
+        let tip1timeend = 60;
         var tip_transform = Mat4.identity().times(Mat4.translation(6.5,12,3,0)).times(Mat4.scale(1.2,1.2,0.2,5));
 
-        if (this.starts){
+        if (this.startgame){
             
             // tip 1: tell user that sharks spawn faster when a life is lost 
             if (time_in_sec > tip1time && time_in_sec < tip1time + 1){
@@ -702,8 +793,8 @@ export class TurtleMania extends Base_Scene {
             }
 
             // tip 2: tell user they can pause game
-            let tip2time = 50;
-            let tip2timeend = 60;
+            let tip2time = 70;
+            let tip2timeend = 80;
 
             if (time_in_sec > tip2time && time_in_sec < tip2time + 1){
                 this.bling_sound.play();
@@ -713,8 +804,8 @@ export class TurtleMania extends Base_Scene {
             }
 
             // tip 3: tell user they can stop music
-            let tip3time = 70;
-            let tip3timeend = 80;
+            let tip3time = 90;
+            let tip3timeend = 100;
 
             if (time_in_sec > tip3time && time_in_sec < tip3time + 1){
                 this.bling_sound.play();
@@ -724,8 +815,8 @@ export class TurtleMania extends Base_Scene {
             }
 
             // tip 4: tell user they can change aquarium lighting color 
-            let tip4time = 90;
-            let tip4timeend = 100;
+            let tip4time = 110;
+            let tip4timeend = 120;
 
             if (time_in_sec > tip4time && time_in_sec < tip4time + 1){
                 this.bling_sound.play();
@@ -735,8 +826,8 @@ export class TurtleMania extends Base_Scene {
             }
 
             // tip 4: tell user they can change aquarium lighting color 
-            let tip5time = 110;
-            let tip5timeend = 120;
+            let tip5time = 130;
+            let tip5timeend = 140;
 
             if (time_in_sec > tip5time && time_in_sec < tip5time + 1){
                 this.bling_sound.play();
@@ -820,7 +911,7 @@ export class TurtleMania extends Base_Scene {
 
         // Start Game (enter key)
         this.key_triggered_button("Start", ['Enter'], () => {
-            this.starts =! this.starts;
+            this.startgame =! this.startgame;
 
             // loop background audio
             if (typeof this.background_sound.loop == 'boolean')
@@ -1637,7 +1728,8 @@ export class TurtleMania extends Base_Scene {
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
-            program_state.set_camera(Mat4.translation(5, -10, -30));
+            this.initial_camera_position = Mat4.translation(5, -10, -30); 
+            program_state.set_camera(this.initial_camera_position);
         }
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
