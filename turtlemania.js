@@ -193,12 +193,13 @@ class Base_Scene extends Scene {
         this.y_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
         this.time_offsets_right = Array(5).fill(0);
 
-        this.x_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * (-100 + 30) -30));
-        this.y_shark_spawn_left = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
+        this.x_shark_spawn_left = Array.from({length: 3}, () => Math.floor(Math.random() * (-100 + 30) -30));
+        this.y_shark_spawn_left = [2, 7, 13];
+        
         this.time_shark_offsets_left = Array(5).fill(0);
 
-        this.x_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * (100 - 30) + 30));
-        this.y_shark_spawn_right = Array.from({length: 5}, () => Math.floor(Math.random() * 18));
+        this.x_shark_spawn_right = Array.from({length: 3}, () => Math.floor(Math.random() * (100 - 30) + 30));
+        this.y_shark_spawn_right = [4, 10, 17];
         this.time_shark_offsets_right = Array(5).fill(0);
 
         // Used to keep track of scaling of turtle during collision detection        
@@ -838,22 +839,28 @@ export class TurtleMania extends Base_Scene {
 
         // Up Movement (arrow key up)
         this.key_triggered_button("Up", ['ArrowUp'], () => {
-            this.y_movement = this.y_movement + 1;
-
+            if(this.y_movement < 37 && !(this.paused)){
+                this.y_movement = this.y_movement + 1;
+            }
         });
         // Down Movement (arrow key down)
         this.key_triggered_button("Down", ['ArrowDown'], () => {
-            this.y_movement = this.y_movement - 1; 
+            if(this.y_movement > -3 && !(this.paused)){
+                this.y_movement = this.y_movement - 1; 
+            }
         });
         
         // Left Movement (arrow key left)
         this.key_triggered_button("Left", ['ArrowLeft'], () => {
+            if(this.x_movement  > -37 && !(this.paused))
             this.x_movement = this.x_movement - 1; 
         });
 
         // Right Movement (arrow key right)
         this.key_triggered_button("Right", ['ArrowRight'], () => {
-            this.x_movement = this.x_movement + 1; 
+            if(this.x_movement < 24 && !(this.paused)){
+                this.x_movement = this.x_movement + 1;
+            } 
         });
 
         this.key_triggered_button("Change Lighting Color", ['c'], () => {
@@ -896,15 +903,52 @@ export class TurtleMania extends Base_Scene {
     }
 
     new_shark_cord_left(shark_count, t){
-        this.x_shark_spawn_left[shark_count] = Math.floor(Math.random() * (-150 +50) -50);
-        this.y_shark_spawn_left[shark_count] = Math.floor(Math.random() * 18);
+        //spawn new coords ensuring not too close to each other
+        var temp_x = Math.floor(Math.random() * (-150 +50) -50);
+        while((this.x_shark_spawn_left).includes(temp_x) || (this.x_shark_spawn_left).includes((temp_x-1)) || 
+              (this.x_shark_spawn_left).includes((temp_x+1)) || (this.x_shark_spawn_left).includes((temp_x-2)) || 
+              (this.x_shark_spawn_left).includes((temp_x+2)) || (this.x_shark_spawn_left).includes((temp_x-3)) || 
+              (this.x_shark_spawn_left).includes((temp_x+3)) || (this.x_shark_spawn_left).includes((temp_x-4)) || 
+              (this.x_shark_spawn_left).includes((temp_x+4)) || (this.x_shark_spawn_left).includes((temp_x-5)) || 
+              (this.x_shark_spawn_left).includes((temp_x+5)) || (this.x_shark_spawn_left).includes((temp_x-6)) || 
+              (this.x_shark_spawn_left).includes((temp_x+6)) || (this.x_shark_spawn_left).includes((temp_x-7)) || 
+              (this.x_shark_spawn_left).includes((temp_x+7))){
+            temp_x = Math.floor(Math.random() * (-150 +50) -50);
+        }
+        this.x_shark_spawn_left[shark_count] = temp_x;
+        var temp_y = Math.floor(Math.random() * 18);
+        while((this.y_shark_spawn_left).includes(temp_y) || (this.y_shark_spawn_left).includes((temp_y-1)) || 
+              (this.y_shark_spawn_left).includes((temp_y+1) || (this.y_shark_spawn_left).includes((temp_y-2)) || 
+              (this.y_shark_spawn_left).includes((temp_y+2)))){
+            temp_y = Math.floor(Math.random() * 18);
+        }
+        this.y_shark_spawn_left[shark_count] = temp_y;
         this.time_shark_offsets_left[shark_count] = t;
 
     }
 
     new_shark_cord_right(shark_count, t){
-        this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (150 - 50) + 50);
-        this.y_shark_spawn_right[shark_count] = Math.floor(Math.random() * 18);
+        //spawn new coords ensuring not too close to each other
+        var temp_x = Math.floor(Math.random() * (150 - 50) + 50);
+        while((this.x_shark_spawn_right).includes(temp_x) || (this.x_shark_spawn_right).includes((temp_x-1)) || 
+              (this.x_shark_spawn_right).includes((temp_x+1)) || (this.x_shark_spawn_right).includes((temp_x-2)) || 
+              (this.x_shark_spawn_right).includes((temp_x+2)) || (this.x_shark_spawn_right).includes((temp_x-3)) || 
+              (this.x_shark_spawn_right).includes((temp_x+3)) || (this.x_shark_spawn_right).includes((temp_x-4)) || 
+              (this.x_shark_spawn_right).includes((temp_x+4)) || (this.x_shark_spawn_right).includes((temp_x-5)) || 
+              (this.x_shark_spawn_right).includes((temp_x+5)) || (this.x_shark_spawn_right).includes((temp_x-6)) || 
+              (this.x_shark_spawn_right).includes((temp_x+6)) || (this.x_shark_spawn_right).includes((temp_x-7)) || 
+              (this.x_shark_spawn_right).includes((temp_x+7))){
+            temp_x = Math.floor(Math.random() * (150 - 50) + 50);
+        }
+        this.x_shark_spawn_right[shark_count] = temp_x;
+        //this.x_shark_spawn_right[shark_count] = Math.floor(Math.random() * (150 - 50) + 50);
+        var temp_y = Math.floor(Math.random() * 18);
+        while((this.y_shark_spawn_right).includes(temp_y) || (this.y_shark_spawn_right).includes((temp_y-1)) || 
+              (this.y_shark_spawn_right).includes((temp_y+1)) || (this.y_shark_spawn_right).includes((temp_y-2)) || 
+              (this.y_shark_spawn_right).includes((temp_y+2))){
+            temp_y = Math.floor(Math.random() * 18);
+        }
+        this.y_shark_spawn_right[shark_count] = temp_y;        
         this.time_shark_offsets_right[shark_count] = t;
 
     }
@@ -1149,7 +1193,7 @@ export class TurtleMania extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075))
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.005) && (Math.abs(shark_to_turtle_y - this.y_movement) < 5.5 + this.collision_count*0.005))
         {
             this.shark_sound.play();
 
@@ -1174,7 +1218,7 @@ export class TurtleMania extends Base_Scene {
         /*Gets turtle and shark coordinates on the same scale */
         let shark_to_turtle_x = shark_x_cord*(59/44) - 9/44;
         let shark_to_turtle_y = shark_y_cord*(37/17) + 19/17;
-        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.05) && (Math.abs(shark_to_turtle_y - this.y_movement) < 6 + this.collision_count*0.075))
+        if((Math.abs(shark_to_turtle_x - turtle_x) < 6 + this.collision_count*0.005) && (Math.abs(shark_to_turtle_y - this.y_movement) < 5.5 + this.collision_count*0.005))
         {
 
             this.shark_sound.play();
