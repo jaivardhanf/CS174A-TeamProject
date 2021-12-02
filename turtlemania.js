@@ -575,6 +575,8 @@ export class TurtleMania extends Base_Scene {
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_tr_transform, shadow_pass? this.materials.turtlelimbs : this.pure);
                 this.shapes.fishbody.draw(context, program_state, turtle_leg_br_transform, shadow_pass? this.materials.turtlelimbs : this.pure);                
      
+        if (!this.startgame){
+
                 // draw loading screen
                 const time_in_sec = t/1000; 
                 const time_loading_screen = 0;
@@ -670,99 +672,97 @@ export class TurtleMania extends Base_Scene {
                                                      .times(Mat4.rotation(tail_rot,0,1,0));
                         this.shapes.tail.draw(context, program_state, tail5_trans, shadow_pass? this.materials.tails.override({color: hex_color("#956cbd")}) : this.pure);                  
                     }
-
                 }
 
-                           
-        }
+                        let zoominturtle = 9.2;
+                        let zoominturtlenend = 14;
 
-        if (!this.startgame){
-                const scenetime = program_state.animation_time / 1000;
-                var newcam = Mat4.translation(1000,1000,-1000);
-                let zoominturtle = 9.2;
-                let zoominturtlenend = 14;
+                        if (time_in_sec > zoominturtle && time_in_sec < zoominturtlenend){
+                                let newcam = Mat4.translation(-6,-5,7);
+                                program_state.set_camera(newcam);
+                                program_state.set_camera(newcam.times(Mat4.translation(t/300, t/600, -t/70))
+                                .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0)).map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
 
-                if (scenetime > zoominturtle && scenetime < zoominturtlenend){
-                        let newcam = Mat4.translation(-6,-5,7);
-                        program_state.set_camera(newcam);
-                        program_state.set_camera(newcam.times(Mat4.translation(t/300, t/600, -t/70))
-                        .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0)).map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
+        //                     program_state.camera_inverse = Mat4.translation(0, -2, -t/1000)
+        //                      .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0))
+        //                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+                        }
+                        let talking_scene = 13.98;
+                        if (time_in_sec > talking_scene){
+                            this.talking_sound.play();
+                        }
 
-//                     program_state.camera_inverse = Mat4.translation(0, -2, -t/1000)
-//                      .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0))
-//                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
-                }
-                let talking_scene = 13.98;
-                if (scenetime > talking_scene){
-                    this.talking_sound.play();
-                }
+                        let scene2 = 13.98;
+                        let scene2end = 15.5;
+                        if (time_in_sec > scene2 && time_in_sec < scene2end){
+                            let text1_trans = Mat4.translation(-3, 5, 0).times(Mat4.scale(0.7,0.7,1));
+                            this.shapes.text.set_string("Hello!", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                        }
 
-                let scene2 = 13.98;
-                let scene2end = 15.5;
-                if (scenetime > scene2 && scenetime < scene2end){
-                    let text1_trans = Mat4.translation(-3, 5, 0).times(Mat4.scale(0.7,0.7,1));
-                    this.shapes.text.set_string("Hello!", context.context);
-                    this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
-                }
+                        let scene3 = 15.5;
+                        let scene3end = 19.5;
+                        if (time_in_sec > scene3 && time_in_sec < scene3end){
+                            let text1_trans = Mat4.translation(-4, 6, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("I'm Turtle, and", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                            let text2_trans = Mat4.translation(-4, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("this is my home!", context.context);
+                            this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
+                        }
+                        let scene4 = 19.5;
+                        let scene4end = 23.5;
+                        if (time_in_sec > scene4 && time_in_sec < scene4end){
+                            let text1_trans = Mat4.translation(-5, 6, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("Recently, sharks have ", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                            let text2_trans = Mat4.translation(-4.5, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("invaded the area!", context.context);
+                            this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
+                        }
+                        let scene5 = 23.5;
+                        let scene5end = 28.5;
+                        if (time_in_sec > scene5 && time_in_sec < scene5end){
+                            let text1_trans = Mat4.translation(-6, 6.5, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("Please help me gain energy", context.context);
+                            this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
+                            let text2_trans = Mat4.translation(-5.5, 5.7, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("back so I can call this", context.context);
+                            this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
+                            let text3_trans = Mat4.translation(-4.8, 4.9, 0).times(Mat4.scale(0.3,0.3,1));
+                            this.shapes.text.set_string("place my home again!", context.context);
+                            this.shapes.text.draw(context, program_state, text3_trans, this.materials.text_image);
+                        }
 
-                let scene3 = 15.5;
-                let scene3end = 19.5;
-                if (scenetime > scene3 && scenetime < scene3end){
-                    let text1_trans = Mat4.translation(-4, 6, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("I'm Turtle, and", context.context);
-                    this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
-                    let text2_trans = Mat4.translation(-4, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("this is my home!", context.context);
-                    this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
-                }
-                let scene4 = 19.5;
-                let scene4end = 23.5;
-                if (scenetime > scene4 && scenetime < scene4end){
-                    let text1_trans = Mat4.translation(-5, 6, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("Recently, sharks have ", context.context);
-                    this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
-                    let text2_trans = Mat4.translation(-4.5, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("invaded the area!", context.context);
-                    this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
-                }
-                let scene5 = 23.5;
-                let scene5end = 28.5;
-                if (scenetime > scene5 && scenetime < scene5end){
-                    let text1_trans = Mat4.translation(-6, 6.5, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("Please help me gain energy", context.context);
-                    this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
-                    let text2_trans = Mat4.translation(-5.5, 5.7, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("back so I can call this", context.context);
-                    this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
-                    let text3_trans = Mat4.translation(-4.8, 4.9, 0).times(Mat4.scale(0.3,0.3,1));
-                    this.shapes.text.set_string("place my home again!", context.context);
-                    this.shapes.text.draw(context, program_state, text3_trans, this.materials.text_image);
-                }
-
-                let talking_scene_end = 28;
-                if (scenetime > talking_scene_end){
-                        this.talking_sound.pause();
-                }
+                        let talking_scene_end = 28;
+                        if (time_in_sec > talking_scene_end){
+                                this.talking_sound.pause();
+                        }
 
 
-                let introsceenend = 28.5;
-                let introsceenendend = 30.5;  
-                if (scenetime > introsceenend && scenetime < introsceenendend){
-                    program_state.camera_inverse = this.initial_camera_position
-                    .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
-                }
+                        let introsceenend = 28.5;
+                        let introsceenendend = 30.5;  
+                        if (time_in_sec > introsceenend && time_in_sec < introsceenendend){
+                            program_state.camera_inverse = this.initial_camera_position
+                            .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
+                        }
 
-                let startscreen = 30;
-                if (scenetime > startscreen){
-                // draw start screen (background + menu/instructions) 
-                    this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
-                    this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
-                }
-                
-        }
+                        let startscreen = 30;
+                        if (time_in_sec > startscreen){
+                        // draw start screen (background + menu/instructions) 
+                            this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
+                            this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,10,0)).times(Mat4.scale(6.2, 6.2, 1)),this.materials.instructions);   
+                        }
 
-        else if (this.startgame){
+                    }
+
+                          
+         }
+
+        if (this.startgame){
             this.loading_sound.pause();
+            program_state.camera_inverse = this.initial_camera_position
+                    .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
                 
                 //}
