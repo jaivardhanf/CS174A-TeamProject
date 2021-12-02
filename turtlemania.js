@@ -688,7 +688,9 @@ export class TurtleMania extends Base_Scene {
         //                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                         }
                         let talking_scene = 13.98;
-                        if (time_in_sec > talking_scene){
+                        let talking_scene_end = 28.5;
+
+                        if (time_in_sec > talking_scene && time_in_sec < talking_scene_end){
                             this.talking_sound.play();
                         }
 
@@ -721,7 +723,7 @@ export class TurtleMania extends Base_Scene {
                             this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
                         }
                         let scene5 = 23.5;
-                        let scene5end = 28.5;
+                        let scene5end = 31;
                         if (time_in_sec > scene5 && time_in_sec < scene5end){
                             let text1_trans = Mat4.translation(-6, 6.5, 0).times(Mat4.scale(0.3,0.3,1));
                             this.shapes.text.set_string("Please help me gain energy", context.context);
@@ -734,20 +736,19 @@ export class TurtleMania extends Base_Scene {
                             this.shapes.text.draw(context, program_state, text3_trans, this.materials.text_image);
                         }
 
-                        let talking_scene_end = 28;
                         if (time_in_sec > talking_scene_end){
                                 this.talking_sound.pause();
                         }
 
 
-                        let introsceenend = 28.5;
-                        let introsceenendend = 30.5;  
+                        let introsceenend = 31;
+                        let introsceenendend = 32.5;  
                         if (time_in_sec > introsceenend && time_in_sec < introsceenendend){
                             program_state.camera_inverse = this.initial_camera_position
                             .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                         }
 
-                        let startscreen = 30;
+                        let startscreen = 31;
                         if (time_in_sec > startscreen){
                         // draw start screen (background + menu/instructions) 
                             this.shapes.square.draw(context, program_state, model_transform.times(Mat4.translation(-5,9,9,0)).times(Mat4.scale(16, 10, 1)),this.materials.startbackground);   
