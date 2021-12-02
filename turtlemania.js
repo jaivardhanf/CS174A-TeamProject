@@ -678,10 +678,14 @@ export class TurtleMania extends Base_Scene {
 
         if (!this.startgame){
                 const scenetime = program_state.animation_time / 1000;
+                var newcam = Mat4.translation(1000,1000,-1000);
                 let zoominturtle = 9.2;
                 let zoominturtlenend = 14;
+
                 if (scenetime > zoominturtle && scenetime < zoominturtlenend){
-                        program_state.set_camera(this.initial_camera_position.times(Mat4.translation(-t/2600, t/2000, t/800))
+                        let newcam = Mat4.translation(-6,-5,7);
+                        program_state.set_camera(newcam);
+                        program_state.set_camera(newcam.times(Mat4.translation(t/300, t/600, -t/70))
                         .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0)).map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
 
 //                     program_state.camera_inverse = Mat4.translation(0, -2, -t/1000)
@@ -704,10 +708,10 @@ export class TurtleMania extends Base_Scene {
                 let scene3 = 15.5;
                 let scene3end = 19.5;
                 if (scenetime > scene3 && scenetime < scene3end){
-                    let text1_trans = Mat4.translation(-4.5, 6, 0).times(Mat4.scale(0.3,0.3,1));
+                    let text1_trans = Mat4.translation(-4, 6, 0).times(Mat4.scale(0.3,0.3,1));
                     this.shapes.text.set_string("I'm Turtle, and", context.context);
                     this.shapes.text.draw(context, program_state, text1_trans, this.materials.text_image);
-                    let text2_trans = Mat4.translation(-4.5, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
+                    let text2_trans = Mat4.translation(-4, 5.2, 0).times(Mat4.scale(0.3,0.3,1));
                     this.shapes.text.set_string("this is my home!", context.context);
                     this.shapes.text.draw(context, program_state, text2_trans, this.materials.text_image);
                 }
