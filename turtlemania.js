@@ -1544,10 +1544,10 @@ export class TurtleMania extends Base_Scene {
         }
 
         // draw item 8: nest  
-        let item8_background_trans = model_transform.times(Mat4.translation(14, 20.8, 0, 0))
+        let item8_background_trans = model_transform.times(Mat4.translation(15.5, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
-        let item8_trans = item8_background_trans.times(Mat4.translation(-.35, -0.1, 2, 0))
+        let item8_trans = item8_background_trans.times(Mat4.translation(-.55, -0.1, 2, 0))
                                                 .times(Mat4.scale(0.6, 0.6, 0.6, 0));
         this.shapes.nest.draw(context, program_state, item8_trans, this.materials.coral.override({color:hex_color("#7a5038")}));
 
