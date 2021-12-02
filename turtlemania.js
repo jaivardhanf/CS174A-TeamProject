@@ -76,8 +76,12 @@ class Base_Scene extends Scene {
             poseidon: new Shape_From_File("assets/poseidon.obj"),
             temple: new Shape_From_File("assets/temple.obj"),
             squid: new Shape_From_File("assets/squid.obj"),
+            nest: new Shape_From_File("assets/NEST.obj"),
             text: new Text_Line(35),
         };
+
+        // set fishbody texture to be zoomed in (bigger scales )
+        this.shapes.fishbody.arrays.texture_coord = this.shapes.fishbody.arrays.texture_coord.map(x => x.times(0.5));
 
         // Floor --> prepared for shadows
         this.floor = new Material(new Shadow_Textured_Phong_Shader(1), 
@@ -111,7 +115,7 @@ class Base_Scene extends Scene {
                 color_texture: null,
                 light_depth_texture: null}),*/
             guppies: new Material(textured,
-                {ambient: .4, diffusivity: .6, texture: new Texture("assets/silver_fish(2).png"), 
+                {ambient: .4, diffusivity: .6, texture: new Texture("assets/scale2.jpeg"), 
                 smoothness: 64,
                 color_texture: null,
                 light_depth_texture: null}),                
@@ -135,6 +139,8 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/gold.jpg")}),
             redwood: new Material(textured,
                 {ambient: 0.9, diffusivity: .9, texture: new Texture("assets/redwood.jpg")}),
+            egg: new Material(new defs.Phong_Shader(),
+                {ambient: .5, diffusivity: .6, specularity: 1, color: hex_color("#FFFFFF")}),
             text_image: new Material(textured, 
                 {ambient: 1, diffusivity: 0, specularity: 0, texture: new Texture("assets/text.png")}),
             dash_board: new Material(textured,
@@ -396,14 +402,52 @@ export class TurtleMania extends Base_Scene {
                                          .times(Mat4.rotation(jelly_movement,0,0,1))
                                          .times(Mat4.scale(1,1,jelly_stretch,0))
                                          .times(Mat4.scale(0.8,0.8,0.8,0));
-                    this.shapes.jellyfish.draw(context, program_state, transform,shadow_pass? this.materials.jellyfish.override({color:color}) : this.pure);
+                    this.shapes.jellyfis
+                    h.draw(context, program_state, transform,shadow_pass? this.materials.jellyfish.override({color:color}) : this.pure);
                 }
-                if (obj.object == "temple") {
-                    let temple_transform = Mat4.translation(position[0], position[1], position[2]);
-                    temple_transform = temple_transform.times(Mat4.scale(3.5,3.5,3.5,0))
-                    this.shapes.temple.draw(context, program_state, temple_transform,shadow_pass? this.materials.redwood : this.pure);
-                }
+                if (obj.object == "nest") {
 
+                    if (position[0] < 0){
+                        transform = transform.times(Mat4.scale(0.6,0.6,0.6,0));
+                        this.shapes.nest.draw(context, program_state, transform, shadow_pass? this.materials.coral.override({color:hex_color("#7a5038")}) : this.pure);
+                        let egg1 = transform.times(Mat4.scale(0.45,0.8,0.6,0))
+                                            .times(Mat4.translation(-0.8,0,0.2,0));
+                        this.shapes.sphere.draw(context, program_state, egg1, shadow_pass? this.materials.egg : this.pure);
+                        let egg2 = transform.times(Mat4.scale(0.4,0.7,0.6,0))
+                                            .times(Mat4.translation(-1.5,0,-0.5,0))
+                                            .times(Mat4.rotation(-10,1,1,1));
+                        this.shapes.sphere.draw(context, program_state, egg2, shadow_pass? this.materials.egg : this.pure);
+                        let egg3 = transform.times(Mat4.scale(0.5,0.8,0.6,0))
+                                            .times(Mat4.translation(0.4,0,-0.6,0))
+                                            .times(Mat4.rotation(-10,1,1,1));
+                        this.shapes.sphere.draw(context, program_state, egg3, shadow_pass? this.materials.egg : this.pure);
+                        let egg4 = transform.times(Mat4.scale(0.5,0.4,0.6,0))
+                                            .times(Mat4.translation(2,0.7,1,0))
+                                            .times(Mat4.rotation(-10,1,1,1));
+                        this.shapes.sphere.draw(context, program_state, egg4, shadow_pass? this.materials.egg : this.pure);                    
+                    }
+                    
+                    else if (position[0] > 0){
+                        transform = transform.times(Mat4.scale(0.6,0.6,0.6,0));
+                        this.shapes.nest.draw(context, program_state, transform, shadow_pass? this.materials.coral.override({color:hex_color("#7a5038")}) : this.pure);
+                        let egg1 = transform.times(Mat4.scale(0.45,0.8,0.6,0))
+                                            .times(Mat4.translation(-0.8,0,0.2,0));
+                        this.shapes.sphere.draw(context, program_state, egg1, shadow_pass? this.materials.egg : this.pure);
+                        let egg2 = transform.times(Mat4.scale(0.4,0.7,0.6,0))
+                                            .times(Mat4.translation(-1.5,0,-0.5,0))
+                                            .times(Mat4.rotation(-10,1,1,1));
+                        this.shapes.sphere.draw(context, program_state, egg2, shadow_pass? this.materials.egg : this.pure);
+                        let egg3 = transform.times(Mat4.scale(0.4,0.78,0.6,0))
+                                            .times(Mat4.translation(0,0,-0.6,0))
+                                            .times(Mat4.rotation(-10,1,1,1));
+                        this.shapes.sphere.draw(context, program_state, egg3, shadow_pass? this.materials.egg : this.pure);
+                        let egg4 = transform.times(Mat4.scale(0.5,0.4,0.6,0))
+                                            .times(Mat4.translation(1,0.7,1,0))
+                                            .times(Mat4.rotation(-10,1,1,1));
+                        this.shapes.sphere.draw(context, program_state, egg4, shadow_pass? this.materials.egg : this.pure);                    
+                        }
+
+                }
             }
         }
 
@@ -1400,13 +1444,29 @@ export class TurtleMania extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, item7_background_trans, this.materials.menubuttons);
         }
 
-        // draw item 8: temple  
+        // draw item 8: nest  
         let item8_background_trans = model_transform.times(Mat4.translation(14, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item8_trans = item8_background_trans.times(Mat4.translation(-.35, -0.1, 2, 0))
-                                                .times(Mat4.scale(0.4, 0.4, 0.4, 0));
-        this.shapes.temple.draw(context, program_state, item8_trans, this.materials.redwood);
+                                                .times(Mat4.scale(0.6, 0.6, 0.6, 0));
+        this.shapes.nest.draw(context, program_state, item8_trans, this.materials.coral.override({color:hex_color("#7a5038")}));
+
+        let egg1 = item8_trans.times(Mat4.scale(0.45,0.75,0.6,0))
+                            .times(Mat4.translation(-0.8,0.2,0,0));
+        this.shapes.sphere.draw(context, program_state, egg1, this.materials.egg);
+        let egg2 = item8_trans.times(Mat4.scale(0.4,0.7,0.6,0))
+                            .times(Mat4.translation(-1.5,0,-0.5,0))
+                            .times(Mat4.rotation(-10,1,1,1));
+        this.shapes.sphere.draw(context, program_state, egg2, this.materials.egg);
+        let egg3 = item8_trans.times(Mat4.scale(0.4,0.78,0.6,0))
+                            .times(Mat4.translation(0,0,-0.6,0))
+                            .times(Mat4.rotation(-10,1,1,1));
+        this.shapes.sphere.draw(context, program_state, egg3, this.materials.egg);
+        let egg4 = item8_trans.times(Mat4.scale(0.5,0.4,0.6,0))
+                            .times(Mat4.translation(1,0.7,1,0))
+                            .times(Mat4.rotation(-10,1,1,1));
+        this.shapes.sphere.draw(context, program_state, egg4, this.materials.egg);
 
         let item8_price_trans = model_transform.times(Mat4.translation(10, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
@@ -1426,7 +1486,7 @@ export class TurtleMania extends Base_Scene {
             let animate_click_transform = item8_background_trans.times(Mat4.scale(1 + click_animate, 1 + click_animate, 1, 0));
             this.shapes.sphere.draw(context, program_state, animate_click_transform, this.materials.menubuttons);
             // draw item on next mouse click          
-            this.userdraw = "temple";
+            this.userdraw = "nest";
             this.offset = price8;
         }
         else {
