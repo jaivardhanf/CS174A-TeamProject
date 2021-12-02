@@ -762,6 +762,8 @@ export class TurtleMania extends Base_Scene {
 
         if (this.startgame){
             this.loading_sound.pause();
+            this.talking_sound.pause();
+
             program_state.camera_inverse = this.initial_camera_position
                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
