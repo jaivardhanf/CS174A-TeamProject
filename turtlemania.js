@@ -46,7 +46,6 @@ class Base_Scene extends Scene {
         // Drawing queue for purchased items 
         this.userdraw = "none"; 
         this.coral_queue = [];
-        this.nest = false;
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
@@ -78,7 +77,7 @@ class Base_Scene extends Scene {
             temple: new Shape_From_File("assets/temple.obj"),
             squid: new Shape_From_File("assets/squid.obj"),
             nest: new Shape_From_File("assets/NEST.obj"),
-            lowturtle: new Shape_From_File("assets/babyturtle.OBJ"),
+            babyturtle: new Shape_From_File("assets/babyturtle.OBJ"),
             text: new Text_Line(35),
         };
 
@@ -407,7 +406,6 @@ export class TurtleMania extends Base_Scene {
                     this.shapes.jellyfish.draw(context, program_state, transform,shadow_pass? this.materials.jellyfish.override({color:color}) : this.pure);
                 }
                 if (obj.object == "nest") {
-                    this.nest = true;                        
                     if (position[0] < 0){
                         transform = transform.times(Mat4.scale(0.6,0.6,0.6,0));
                         this.shapes.nest.draw(context, program_state, transform, shadow_pass? this.materials.coral.override({color:hex_color("#7a5038")}) : this.pure);
@@ -427,6 +425,16 @@ export class TurtleMania extends Base_Scene {
                                                 .times(Mat4.translation(2,0.7,1,0))
                                                 .times(Mat4.rotation(-10,1,1,1));
                             this.shapes.sphere.draw(context, program_state, egg4, shadow_pass? this.materials.egg : this.pure);  
+
+                            let babyturtle1_transform = transform.times(Mat4.translation(-2.5,-0.5,0))
+                                                .times(Mat4.rotation(33,0,1,0))
+                                                .times(Mat4.scale(0.6,0.6,0.6,0));
+                            this.shapes.babyturtle.draw(context, program_state, babyturtle1_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
+
+                            let babyturtle2_transform = transform.times(Mat4.translation(2.5,0,0))
+                                                .times(Mat4.rotation(-33,0,1,0))
+                                                .times(Mat4.scale(0.6,0.6,0.6,0));
+                            this.shapes.babyturtle.draw(context, program_state, babyturtle2_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
                                          
                     }
                     
@@ -447,7 +455,17 @@ export class TurtleMania extends Base_Scene {
                             let egg4 = transform.times(Mat4.scale(0.5,0.4,0.6,0))
                                                 .times(Mat4.translation(1,0.7,1,0))
                                                 .times(Mat4.rotation(-10,1,1,1));
-                            this.shapes.sphere.draw(context, program_state, egg4, shadow_pass? this.materials.egg : this.pure);                    
+                            this.shapes.sphere.draw(context, program_state, egg4, shadow_pass? this.materials.egg : this.pure); 
+
+                            let babyturtle1_transform = transform.times(Mat4.translation(-2.5,-0.5,0))
+                                                .times(Mat4.rotation(33,0,1,0))
+                                                .times(Mat4.scale(0.6,0.6,0.6,0));
+                            this.shapes.babyturtle.draw(context, program_state, babyturtle1_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
+
+                            let babyturtle2_transform = transform.times(Mat4.translation(2.5,0,0))
+                                                .times(Mat4.rotation(-33,0,1,0))
+                                                .times(Mat4.scale(0.6,0.6,0.6,0));
+                            this.shapes.babyturtle.draw(context, program_state, babyturtle2_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));                   
                     }
 
                 }
@@ -792,85 +810,6 @@ export class TurtleMania extends Base_Scene {
             this.shapes.square.draw(context, program_state, game_over.times(Mat4.scale(7, 7, 1)), this.materials.gameoverpic);
             let take_pix1 = Mat4.identity().times(Mat4.translation(-19,17.5,4)).times(Mat4.scale(1.2,1.2,0.2,5));
             this.shapes.square.draw(context, program_state, take_pix1.times(Mat4.scale(3.5, 3.5, .50)), this.materials.takepix);
-
-            // draw  baby turtles at game over if any nests were bought 
-           if (this.nest){
-                let babyturtle1_transform = Mat4.translation(-25,0,0)
-                                                .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle1_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle2_transform = Mat4.translation(-19,1.5,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle2_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle3_transform = Mat4.translation(-15,0,0)
-                                        .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle3_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle4_transform = Mat4.translation(-10,1.5,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle4_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle5_transform = Mat4.translation(-5,2,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle5_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle6_transform = Mat4.translation(0,2,0)
-                                        .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle6_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle7_transform = Mat4.translation(5,1.5,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle7_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle8_transform = Mat4.translation(10,0.5,0)
-                                        .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle8_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle9_transform = Mat4.translation(15,2,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle9_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-            
-                let babyturtle10_transform = Mat4.translation(-4,-1,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle10_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle11_transform = Mat4.translation(7,-1,0)
-                                        .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle11_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle12_transform = Mat4.translation(-11,-1,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle12_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle13_transform = Mat4.translation(-21,-1,0)
-                                        .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle13_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-
-                let babyturtle14_transform = Mat4.translation(2,-1,0)
-                                        .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle14_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-                
-                let babyturtle15_transform = Mat4.translation(14,-1,0)
-                                        .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.7,0.7,0.7,0));
-                this.shapes.lowturtle.draw(context, program_state, babyturtle15_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
-            }
-
         }
 
     }
@@ -1410,7 +1349,7 @@ export class TurtleMania extends Base_Scene {
         }
 
         // draw item 4: golden squid  
-        let item4_background_trans = model_transform.times(Mat4.translation(-7.6, 20.8, 0, 0))
+        let item4_background_trans = model_transform.times(Mat4.translation(-6.5, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item4_trans = item4_background_trans.times(Mat4.translation(0.1, -0.25, 2, 0))
@@ -1419,7 +1358,7 @@ export class TurtleMania extends Base_Scene {
 
         let item4_price_trans = model_transform.times(Mat4.translation(-10.8, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
-        var price4 = 9;
+        var price4 = 15;
         this.shapes.text.set_string("$"+ price4.toString(), context.context);
         this.shapes.text.draw(context, program_state, item4_price_trans, this.materials.text_image);
         
@@ -1444,14 +1383,14 @@ export class TurtleMania extends Base_Scene {
         }
 
         // draw item 5: starfish  
-        let item5_background_trans = model_transform.times(Mat4.translation(-2.2, 20.8, 0, 0))
+        let item5_background_trans = model_transform.times(Mat4.translation(-1.5, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item5_trans = item5_background_trans.times(Mat4.translation(-0.1, -0.25, 2, 0))
                                                 .times(Mat4.scale(.5, .5, 1, 0))
         this.shapes.starfish.draw(context, program_state, item5_trans, this.materials.coral.override({color: hex_color("#ff892e")}));
 
-        let item5_price_trans = model_transform.times(Mat4.translation(-5.6, 20.3, 1, 0))
+        let item5_price_trans = model_transform.times(Mat4.translation(-4.7, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
         var price5 = 5;
         this.shapes.text.set_string("$"+ price5.toString(), context.context);
@@ -1476,14 +1415,14 @@ export class TurtleMania extends Base_Scene {
             this.shapes.sphere.draw(context, program_state, item5_background_trans, this.materials.menubuttons);
         }
         // draw item 6: seashell  
-        let item6_background_trans = model_transform.times(Mat4.translation(3, 20.8, 0, 0))
+        let item6_background_trans = model_transform.times(Mat4.translation(4, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item6_trans = item6_background_trans.times(Mat4.translation(0.2, -0.25, 2, 0))
                                                 .times(Mat4.scale(.4, .4, 1, 0))
         this.shapes.shell1.draw(context, program_state, item6_trans, this.materials.coral.override({color: hex_color("#f5988e")}));
 
-        let item6_price_trans = model_transform.times(Mat4.translation(-0.5, 20.3, 1, 0))
+        let item6_price_trans = model_transform.times(Mat4.translation(0.3, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
         var price6 = 4;
         this.shapes.text.set_string("$"+ price6.toString(), context.context);
@@ -1509,7 +1448,7 @@ export class TurtleMania extends Base_Scene {
         }
 
         // draw item 7: jellyfish  
-        let item7_background_trans = model_transform.times(Mat4.translation(8.5, 20.8, 0, 0))
+        let item7_background_trans = model_transform.times(Mat4.translation(9.2, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
         let item7_trans = item7_background_trans.times(Mat4.translation(-.35, -0.4, 2, 0))
@@ -1518,7 +1457,7 @@ export class TurtleMania extends Base_Scene {
                                                 .times(Mat4.rotation(-66, 0, 1, 0));
         this.shapes.jellyfish.draw(context, program_state, item7_trans, this.materials.coral.override({color: hex_color("#6ee7f0")}));
 
-        let item7_price_trans = model_transform.times(Mat4.translation(4.8, 20.3, 1, 0))
+        let item7_price_trans = model_transform.times(Mat4.translation(5.7, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
         var price7 = 7;
         this.shapes.text.set_string("$"+ price7.toString(), context.context);
@@ -1547,7 +1486,7 @@ export class TurtleMania extends Base_Scene {
         let item8_background_trans = model_transform.times(Mat4.translation(15.5, 20.8, 0, 0))
                                                     .times(Mat4.scale(1.4, 1.4, .5, 0));
 
-        let item8_trans = item8_background_trans.times(Mat4.translation(-.55, -0.1, 2, 0))
+        let item8_trans = item8_background_trans.times(Mat4.translation(-.35, -0.1, 2, 0))
                                                 .times(Mat4.scale(0.6, 0.6, 0.6, 0));
         this.shapes.nest.draw(context, program_state, item8_trans, this.materials.coral.override({color:hex_color("#7a5038")}));
 
@@ -1567,9 +1506,9 @@ export class TurtleMania extends Base_Scene {
                             .times(Mat4.rotation(-10,1,1,1));
         this.shapes.sphere.draw(context, program_state, egg4, this.materials.egg);
 
-        let item8_price_trans = model_transform.times(Mat4.translation(10, 20.3, 1, 0))
+        let item8_price_trans = model_transform.times(Mat4.translation(10.5, 20.3, 1, 0))
                                                .times(Mat4.scale(0.75, 0.75, 1, 0))
-        var price8 = 15;
+        var price8 = 12;
         this.shapes.text.set_string("$"+ price8.toString(), context.context);
         this.shapes.text.draw(context, program_state, item8_price_trans, this.materials.text_image);
 
