@@ -33,7 +33,7 @@ Our project is a one-player game situated in a virtual aquarium, in which the pl
 8) Lighting: Light source from above that illuminates the entire tank, can change color when ‘c’ is pressed to mimic color-changing features of real life fish tanks
 
 **Bugs**
-- Turtle is able to "sink" into the sand, so player could technically hide there to avoid sharks. 
+- Sharks at times swim through each other 
 - Sounds lag when triggered too immediately after another sound
 - Placement of decorations/items often collides with other objects 
 - Turtle movement is not very smooth
