@@ -674,7 +674,7 @@ export class TurtleMania extends Base_Scene {
                     }
                 }
 
-                        let zoominturtle = 9.2;
+                        let zoominturtle = 9;
                         let zoominturtlenend = 14;
 
                         if (time_in_sec > zoominturtle && time_in_sec < zoominturtlenend){
