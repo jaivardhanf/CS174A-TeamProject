@@ -1047,7 +1047,16 @@ export class TurtleMania extends Base_Scene {
             let eye_transform = model_transform.times(Mat4.translation(x_cord+2, y_cord, 0.8, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(0.1,0.1,0.1,1));
-            this.shapes.fishbody.draw(context, program_state, eye_transform, shadow_pass? this.materials.eye : this.pure);
+            if(this.lifes == 3){
+                this.shapes.fishbody.draw(context, program_state, eye_transform, shadow_pass? this.materials.eye : this.pure);
+            }else if(this.lifes == 2){
+                this.shapes.fishbody.draw(context, program_state, eye_transform.times(Mat4.scale(1.5,1.5,0.5,0)).times(Mat4.translation(0,0,-2,0)), shadow_pass? this.materials.eye.override({color:hex_color("#FF0000")}) : this.pure);
+            }else{
+                this.shapes.fishbody.draw(context, program_state, eye_transform.times(Mat4.scale(2.5,2.5,1,0)).times(Mat4.translation(0,0,-2.2,0)), shadow_pass? this.materials.eye.override({color:hex_color("#FF0000")}) : this.pure);
+                this.shapes.tail.draw(context, program_state, eye_transform.times(Mat4.scale(10,10,3,0)).times(Mat4.translation(0.6,-0.10,-3,0)).times(Mat4.rotation(Math.PI+0.05, 0,0,1)), shadow_pass? this.materials.shark.override({color:hex_color("#FFFFFF")}) : this.pure);
+                this.shapes.tail.draw(context, program_state, eye_transform.times(Mat4.scale(10,10,3,0)).times(Mat4.translation(0.1,-0.10,-2.0,0)).times(Mat4.rotation(Math.PI+0.20, 0,0,1)), shadow_pass? this.materials.shark.override({color:hex_color("#FFFFFF")}) : this.pure);
+
+            }
 
             let tails_transform = model_transform.times(Mat4.translation(x_cord-3, y_cord, 0, 0))
                                              .times(Mat4.translation((t-this.time_shark_offsets_left[shark_count])*speed,0,0,0))
@@ -1091,8 +1100,16 @@ export class TurtleMania extends Base_Scene {
             let eye_transform = model_transform.times(Mat4.translation(x_cord-2, y_cord, 0.8, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(0.1,0.1,0.1,1));
-            this.shapes.fishbody.draw(context, program_state, eye_transform,shadow_pass? this.materials.eye : this.pure);
+            if(this.lifes == 3){
+                this.shapes.fishbody.draw(context, program_state, eye_transform, shadow_pass? this.materials.eye : this.pure);
+            }else if(this.lifes == 2){
+                this.shapes.fishbody.draw(context, program_state, eye_transform.times(Mat4.scale(1.5,1.5,0.5,0)).times(Mat4.translation(0,0,-2,0)), shadow_pass? this.materials.eye.override({color:hex_color("#FF0000")}) : this.pure);
+            }else{
+                this.shapes.fishbody.draw(context, program_state, eye_transform.times(Mat4.scale(2.5,2.5,1,0)).times(Mat4.translation(0,0,-2.2,0)), shadow_pass? this.materials.eye.override({color:hex_color("#FF0000")}) : this.pure);
+                this.shapes.tail.draw(context, program_state, eye_transform.times(Mat4.scale(10,10,3,0)).times(Mat4.translation(-0.45,-0.2,-2.0,0)).times(Mat4.rotation(Math.PI+1.80, 0,0,1)), shadow_pass? this.materials.shark.override({color:hex_color("#FFFFFF")}) : this.pure);
+                this.shapes.tail.draw(context, program_state, eye_transform.times(Mat4.scale(10,10,3,0)).times(Mat4.translation(-0.35,-0.095,-3.0,0)).times(Mat4.rotation(Math.PI+1.30, 0,0,1)), shadow_pass? this.materials.shark.override({color:hex_color("#FFFFFF")}) : this.pure);
 
+            }
             let tails_transform = model_transform.times(Mat4.translation(x_cord+3.03, y_cord, 0, 0))
                                              .times(Mat4.translation(-(t-this.time_shark_offsets_right[shark_count])*speed,0,0,0))
                                              .times(Mat4.scale(2,1.5,1,1))
