@@ -30,7 +30,6 @@ Our project is a one-player game situated in a virtual aquarium, in which the pl
 6) Texture & Shading: the fishes have stripes and gradient-colored tails, the sharks have shark-like skin, the water has swirls of different shades of blue to represent water. Jellyfish (purchasable item) have custom shading to mimic their transparency. 
 7) Sound: a chomping sound each time a turtle eats a fish and there is background music which can be toggled on and off
 8) Lighting: Light source from above that illuminates the entire tank, can change color when ‘c’ is pressed to mimic color-changing features of real life fish tanks
-9) Night and Day Mode: Users are able to toggle between night and day mode by pressing the 'n' button
 
 **Bugs**
 - Sharks at times swim through each other 
