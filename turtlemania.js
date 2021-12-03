@@ -115,10 +115,6 @@ class Base_Scene extends Scene {
                 {ambient: .4, diffusivity: .6, color: hex_color("#548a62")}),
             turtlelimbs: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#33573c")}),
-            /*guppies: new Material(new defs.Phong_Shader(),
-                {ambient: .4, diffusivity: .6, color: hex_color("#FBAB7F"), smoothness: 64,
-                color_texture: null,
-                light_depth_texture: null}),*/
             guppies: new Material(textured,
                 {ambient: .4, diffusivity: .6, texture: new Texture("assets/scale2.jpeg"), 
                 smoothness: 64,
@@ -693,9 +689,6 @@ export class TurtleMania extends Base_Scene {
                                 program_state.set_camera(newcam.times(Mat4.translation(t/300, t/600, -t/70))
                                 .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0)).map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1)));
 
-        //                     program_state.camera_inverse = Mat4.translation(0, -2, -t/1000)
-        //                      .times(Mat4.rotation(Math.sin(t/1475), 0, 1, 0))
-        //                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
                         }
                         let talking_scene = 13.98;
                         let talking_scene_end = 28.5;
@@ -777,14 +770,6 @@ export class TurtleMania extends Base_Scene {
             program_state.camera_inverse = this.initial_camera_position
                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
         }
-                
-                //}
-//                 if (scenetime > rotateturtle && scenetime < rotateturtleend){
-//                     program_state.camera_inverse = turtle_body.times(Mat4.translation(0, -2, -20))
-//                     .times(Mat4.rotation(Math.cos(t/1000), 0, 1, 0))
-//                     .map((x,i) => Vector.from(program_state.camera_inverse[i]).mix(x, 0.1));
-//                 }
-                
 
         // draw tips at time intervals
         const time_in_sec = t/1000; 
@@ -1266,8 +1251,8 @@ export class TurtleMania extends Base_Scene {
         let turtle_x = this.x_movement;
         let turtle_y = this.y_movement;
         /*Gets turtle and fishes coordinates on the same scale */
-        //turtle_x bounds:[-36, 23] turtle_y bounds: [-6.5, 49] 
-        //fish_x_cord bounds [-27,17] fish_y_cord bounds [-3.5 ,22]
+        //turtle_x bounds on screen: [-36, 23] turtle_y bounds: [-6.5, 49] 
+        //fish_x_cord bounds ons creen [-27,17] fish_y_cord bounds [-3.5 ,22]
         //fish_x_cord converted to turtle_x coords using equation: Turtle-X_cord = fish_x_cord(59/44) - 9/44
         //fish_x_cord converted to turtle_x coords using equation: Turtle-Y_cord = fish_y_cord(59/44) - 9/44
         let fish_to_turtle_x = fish_x_cord*(59/44) - 9/44;
@@ -1318,7 +1303,6 @@ export class TurtleMania extends Base_Scene {
                 this.new_shark_cord_right(i, t);
             }
 
-            // this.new_shark_cord_left(shark_count);
             this.lifes = this.lifes - 1;
         }
     }
@@ -1344,7 +1328,6 @@ export class TurtleMania extends Base_Scene {
                 this.new_shark_cord_right(i, t);
             }
 
-            // this.new_shark_cord_right(shark_count);
             this.lifes = this.lifes - 1;
 
         }
