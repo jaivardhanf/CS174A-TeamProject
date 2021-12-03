@@ -411,7 +411,7 @@ export class TurtleMania extends Base_Scene {
                 if (obj.object == "nest") {
 
                     if (position[0] < 0){
-                        transform = transform.times(Mat4.scale(0.5,0.5,0.5,0));
+                        transform = transform.times(Mat4.scale(0.6,0.6,0.6,0));
                         this.shapes.nest.draw(context, program_state, transform, shadow_pass? this.materials.coral.override({color:hex_color("#7a5038")}) : this.pure);
 
                             let egg1 = transform.times(Mat4.scale(0.45,0.8,0.6,0))
@@ -433,7 +433,7 @@ export class TurtleMania extends Base_Scene {
                     }
                     
                     else if (position[0] > 0){
-                        transform = transform.times(Mat4.scale(0.5,0.5,0.5,0));
+                        transform = transform.times(Mat4.scale(0.6,0.6,0.6,0));
                         this.shapes.nest.draw(context, program_state, transform, shadow_pass? this.materials.coral.override({color:hex_color("#7a5038")}) : this.pure);
                             let egg1 = transform.times(Mat4.scale(0.45,0.8,0.6,0))
                                                 .times(Mat4.translation(-0.8,0,0.2,0));
@@ -878,17 +878,17 @@ export class TurtleMania extends Base_Scene {
                 
                 let babyturtle1_transform = this.nest_location[i].times(Mat4.translation(-2.5,0,0))
                                                 .times(Mat4.rotation(-33,0,1,0))
-                                                .times(Mat4.scale(0.4,0.4,0.4,0));
+                                                .times(Mat4.scale(0.5,0.5,0.5,0));
                 this.shapes.babyturtle.draw(context, program_state, babyturtle1_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
 
                 let babyturtle2_transform = this.nest_location[i].times(Mat4.translation(2.5,0,0))
                                         .times(Mat4.rotation(33,0,1,0))
-                                        .times(Mat4.scale(0.4,0.4,0.4,0));
+                                                .times(Mat4.scale(0.5,0.5,0.5,0));
                 this.shapes.babyturtle.draw(context, program_state, babyturtle2_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
 
                 let babyturtle3_transform = this.nest_location[i].times(Mat4.translation(4,0,0))
                                         .times(Mat4.rotation(-33,0,1,0))
-                                        .times(Mat4.scale(0.4,0.4,0.4,0));
+                                                .times(Mat4.scale(0.5,0.5,0.5,0));
                 this.shapes.babyturtle.draw(context, program_state, babyturtle3_transform, this.materials.turtle.override({color: hex_color("#abeb91")}));
             }
 
@@ -1355,7 +1355,7 @@ export class TurtleMania extends Base_Scene {
                 this.nest_count += 1;
                 let transform = Mat4.translation(pos_world_far[0], pos_world_far[1], pos_world_far[2])
                                     .times(Mat4.scale(obj_scale, obj_scale, obj_scale, 0));
-                this.nest_location.push(transform.times(Mat4.scale(0.5,0.5,0.5,0)));
+                this.nest_location.push(transform.times(Mat4.scale(0.6,0.6,0.6,0)));
             }
             this.userdraw = "none";
             this.sand_dollars = this.sand_dollars - this.offset;
