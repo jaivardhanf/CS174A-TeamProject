@@ -20,6 +20,8 @@ class Base_Scene extends Scene {
         this.startgame = false; 
         // pause toggle
         this.paused = false; 
+        //night mode
+        this.night = false;
 
         // Sounds
         this.background_sound = new Audio("assets/naruto.mp3");
@@ -100,6 +102,7 @@ class Base_Scene extends Scene {
             menubuttons: new Material(textured,
                 {ambient: 0.9, diffusivity: 1, specularity: 1,  texture: new Texture("assets/bubble3.png")}),
             water: new Material(textured, {ambient: .5, texture: new Texture("assets/water.jpeg")}),
+            nightwater: new Material(textured, {ambient: .5, texture: new Texture("assets/nightwater.jpg")}),
             sand: new Material(new Shadow_Textured_Phong_Shader(1), 
                 {ambient: 0.3, diffusivity: .9, color: hex_color("#ffaf40"), smoothness: 64,
                 color_texture: new Texture("assets/sand3.png"),
@@ -167,6 +170,8 @@ class Base_Scene extends Scene {
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip4.png")}),
             tip5: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/tip5.png")}),
+            tip6: new Material(textured, 
+                {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/nightmode.png")}), 
             sanddollar: new Material(textured, 
                 {ambient: 1, diffusivity: .9, specularity: 1, texture: new Texture("assets/sanddollar.png")}),
             heart: new Material(textured, 
@@ -326,7 +331,12 @@ export class TurtleMania extends Base_Scene {
                                                    .times(Mat4.scale(60, 60, 60))
                                                    .times(Mat4.rotation(t/40000, 0, 1, 0));
 
+        if(this.night){
+            this.shapes.aquarium.draw(context, program_state, background_transform, this.materials.nightwater);
+        }
+        else{
         this.shapes.aquarium.draw(context, program_state, background_transform, this.materials.water);
+        }
 
         // Draw aquarium floor (sand)
         let sand_transform = model_transform.times(Mat4.rotation(0, 0, 1, 0))
@@ -835,6 +845,16 @@ export class TurtleMania extends Base_Scene {
             if (time_in_sec > tip5time && time_in_sec < tip5timeend) {
                 this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip5);
             }
+            //tip 6: tell user they can change to night mode
+            let tip6time = 150;
+            let tip6timeend = 160;
+            if (time_in_sec > tip6time && time_in_sec < tip6time + 1){
+                this.bling_sound.play();
+            }
+            if (time_in_sec > tip6time && time_in_sec < tip6timeend) {
+                this.shapes.square.draw(context, program_state, tip_transform.times(Mat4.scale(7, 7, 1)), this.materials.tip6);
+            }
+
 
         }
        
@@ -964,6 +984,9 @@ export class TurtleMania extends Base_Scene {
         // Pause Game (p key)
         this.key_triggered_button("Pause", ['p'], () => {
             this.paused =! this.paused;
+        });
+        this.key_triggered_button("Change to Night Mode", ['n'], () => {
+            this.night =! this.night;
         });
 
     }
