@@ -5,8 +5,8 @@
 Our project is a one-player game situated in a virtual aquarium, in which the player controls/moves a turtle through a series of key interactions. The goal is to eat as many little fish as possible to earn "sand dollars" (points) used to decorate the aquarium, all while avoiding the sharks. The more fish the player eats, the more sand dollars they have earned to buy accessories, which are displayed on the menu bar at the top. The turtle has three lives and each time it is "eaten" by a shark, the turtle loses one life and the sharks will spawn faster.
 
 **How to run the game:**	
-1) MacOS: ./host.command
-   Windows: host.bat
+1) MacOS: ./host.command <br>
+   Windows: host.bat <br>
 2) Open browser and go to http://localhost:8080
 
 **How to Play**	
