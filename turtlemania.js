@@ -30,6 +30,8 @@ class Base_Scene extends Scene {
         this.loading_sound = new Audio("assets/backgroundmusic.mp3");
         this.gameover_sound = new Audio("assets/gameover.mp3"); 
         this.talking_sound = new Audio("assets/talking.mp3"); 
+        this.woohoo_sound = new Audio("assets/woohooo.mp3"); 
+
 
         
         // Lighting 
@@ -873,6 +875,7 @@ export class TurtleMania extends Base_Scene {
 
              // draw three baby turtles at game over if nests were bought 
             for (let i = 0; i < this.nest_count; i++){
+                
                 let babyturtle1_transform = this.nest_location[i].times(Mat4.translation(-2.5,0,0))
                                                 .times(Mat4.rotation(-33,0,1,0))
                                                 .times(Mat4.scale(0.4,0.4,0.4,0));
@@ -892,7 +895,6 @@ export class TurtleMania extends Base_Scene {
         }
 
     }
-
 
     make_control_panel() {
 
